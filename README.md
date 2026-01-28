@@ -1,32 +1,20 @@
 # ArcGIS Pro CLI
 
-Make ArcGIS Pro sessions observable for AI agents and automation tools.
-
-## Two Components, Clear Roles
-
-| Component | Role | What it does |
-|-----------|------|--------------|
-| **ProExporter Add-in** | Context exfiltration | Exports session state from ArcGIS Pro to disk |
-| **arcgispro CLI** | Query interface | Reads exported data and answers questions |
-
-The add-in **exports**. The CLI **queries**. Simple.
-
-## Quick Start
+Give AI agents eyes into ArcGIS Pro.
 
 ```bash
 pip install arcgispro-cli
 arcgispro install
 ```
 
-That's it! The `install` command launches the add-in installer. Click "Install Add-In" and restart ArcGIS Pro.
-
 ## How It Works
 
+**Add-in exports. CLI queries.**
+
 1. Open a project in ArcGIS Pro
-2. Click **Snapshot** in the **CLI** ribbon tab → exports context to `.arcgispro/`
-3. Query the exported context:
+2. Click **Snapshot** in the **CLI** ribbon tab
+3. Ask questions:
    ```bash
-   cd /path/to/your/project
    arcgispro layers              # What layers do I have?
    arcgispro layer "Parcels"     # Tell me about this layer
    arcgispro fields "Parcels"    # What fields are in it?
@@ -34,7 +22,7 @@ That's it! The `install` command launches the add-in installer. Click "Install A
 
 ## CLI Commands
 
-### Setup Commands
+### Setup
 
 | Command | Description |
 |---------|-------------|
@@ -44,22 +32,22 @@ That's it! The `install` command launches the add-in installer. Click "Install A
 | `arcgispro clean` | Remove generated files |
 | `arcgispro open` | Open folder or select project |
 
-### Query Commands
+### Query
 
 | Command | Description |
 |---------|-------------|
 | `arcgispro project` | Show project info |
 | `arcgispro maps` | List all maps |
-| `arcgispro map [name]` | Show map details (default: active map) |
+| `arcgispro map [name]` | Map details |
 | `arcgispro layers` | List all layers |
-| `arcgispro layers --broken` | List broken layers |
-| `arcgispro layer <name>` | Show layer details + field schema |
-| `arcgispro fields <name>` | Show just the field schema |
-| `arcgispro tables` | List standalone tables |
-| `arcgispro connections` | List data connections |
-| `arcgispro context` | Print full markdown summary |
+| `arcgispro layers --broken` | Just the broken ones |
+| `arcgispro layer <name>` | Layer details + fields |
+| `arcgispro fields <name>` | Just the fields |
+| `arcgispro tables` | Standalone tables |
+| `arcgispro connections` | Data connections |
+| `arcgispro context` | Full markdown dump |
 
-All query commands support `--json` for machine-readable output.
+Add `--json` to any query command for machine-readable output.
 
 ## Requirements
 
