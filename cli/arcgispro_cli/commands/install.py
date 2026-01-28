@@ -12,8 +12,8 @@ console = Console()
 
 
 def get_addin_path() -> Path:
-    """Get the path to the bundled .esriAddinX file."""
-    return Path(__file__).parent.parent / "addin" / "ProExporter.esriAddinX"
+    """Get the path to the bundled .addin file."""
+    return Path(__file__).parent.parent / "addin" / "ProExporter.addin"
 
 
 @click.command("install")
