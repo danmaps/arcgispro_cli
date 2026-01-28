@@ -14,7 +14,7 @@ That's it! The `install` command launches the add-in installer. Click "Install A
 ## How It Works
 
 1. Open a project in ArcGIS Pro
-2. Click **Snapshot** in the ProExporter ribbon tab
+2. Click **Snapshot** in the **CLI** ribbon tab
 3. A `.arcgispro/` folder is created next to your `.aprx` file containing:
    - Project metadata (maps, layouts, geodatabases)
    - Layer details (fields, feature counts, visibility, symbology type)

@@ -340,7 +340,7 @@ The CLI expects exports in `.arcgispro/` relative to the current directory or an
 
 ## Workflow
 
-1. **In ArcGIS Pro:** Click ""Snapshot"" button in the ArcGIS Pro CLI ribbon group
+1. **In ArcGIS Pro:** Click ""Snapshot"" button in the **CLI** ribbon tab
 2. **In terminal:** Run `arcgispro inspect` to see what was exported
 3. **Use context:** Read JSON files or markdown summary for analysis
 
