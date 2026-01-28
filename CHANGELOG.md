@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-01-28
+
+### Changed
+- Updated README with component roles table (add-in exports, CLI queries)
+- Updated AGENT_TOOL_SKILL.md with v0.2.0 query commands
+
 ## [0.2.0] - 2026-01-28
 
 ### Changed
