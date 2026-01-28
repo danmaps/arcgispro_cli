@@ -2,6 +2,15 @@
 
 Make ArcGIS Pro sessions observable for AI agents and automation tools.
 
+## Two Components, Clear Roles
+
+| Component | Role | What it does |
+|-----------|------|--------------|
+| **ProExporter Add-in** | Context exfiltration | Exports session state from ArcGIS Pro to disk |
+| **arcgispro CLI** | Query interface | Reads exported data and answers questions |
+
+The add-in **exports**. The CLI **queries**. Simple.
+
 ## Quick Start
 
 ```bash
@@ -14,9 +23,8 @@ That's it! The `install` command launches the add-in installer. Click "Install A
 ## How It Works
 
 1. Open a project in ArcGIS Pro
-2. Click **Snapshot** in the **CLI** ribbon tab
-3. A `.arcgispro/` folder is created next to your `.aprx` file
-4. Query the exported context:
+2. Click **Snapshot** in the **CLI** ribbon tab → exports context to `.arcgispro/`
+3. Query the exported context:
    ```bash
    cd /path/to/your/project
    arcgispro layers              # What layers do I have?

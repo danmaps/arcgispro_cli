@@ -296,59 +296,83 @@ This folder contains exported context from an ArcGIS Pro session. Use this infor
         {
             var content = @"# ArcGIS Pro CLI Tool
 
-The `arcgispro` CLI tool reads exported context and provides commands for AI agents.
+## Two Components, Clear Roles
+
+| Component | Role | What it does |
+|-----------|------|--------------|
+| **ProExporter Add-in** | Context exfiltration | Exports session state from ArcGIS Pro to disk |
+| **arcgispro CLI** | Query interface | Reads exported data and answers questions |
+
+The add-in **exports**. The CLI **queries**. Neither modifies your ArcGIS Pro project.
 
 ## Installation
 
 ```bash
 pip install arcgispro-cli
-# or
-pip install -e path/to/arcgispro_cli
+arcgispro install   # Installs the add-in
 ```
 
-## Commands
+## Query Commands
 
-### Inspect Current Context
+The CLI is query-focused. Ask it questions about the exported context:
+
 ```bash
-arcgispro inspect
-```
-Prints a human-readable summary of the exported context.
+# What's in this project?
+arcgispro project
+arcgispro maps
+arcgispro layers
 
-### Validate Exports
+# Tell me about a specific layer
+arcgispro layer ""Parcels""
+arcgispro fields ""Parcels""
+
+# Find problems
+arcgispro layers --broken
+
+# Get everything (for pasting to AI chat)
+arcgispro context
+```
+
+All query commands support `--json` for machine-readable output:
 ```bash
-arcgispro dump     # Validate JSON context files
-arcgispro images   # Validate exported images
+arcgispro layers --json
+arcgispro layer ""Parcels"" --json
 ```
 
-### Create Full Snapshot
+## Setup Commands
+
 ```bash
-arcgispro snapshot
+arcgispro install     # Install the add-in
+arcgispro uninstall   # Show uninstall instructions
+arcgispro status      # Validate exported files
+arcgispro clean       # Remove exported files
+arcgispro open        # Open export folder
 ```
-Assembles context + images into the `snapshot/` folder.
-
-### Clean Up
-```bash
-arcgispro clean --all       # Remove all exports
-arcgispro clean --images    # Remove only images
-arcgispro clean --context   # Remove only context JSON
-arcgispro clean --snapshot  # Remove only snapshot folder
-```
-
-## Folder Contract
-
-The CLI expects exports in `.arcgispro/` relative to the current directory or an ancestor directory.
 
 ## Workflow
 
-1. **In ArcGIS Pro:** Click ""Snapshot"" button in the **CLI** ribbon tab
-2. **In terminal:** Run `arcgispro inspect` to see what was exported
-3. **Use context:** Read JSON files or markdown summary for analysis
+1. **In ArcGIS Pro:** Click ""Snapshot"" in the **CLI** ribbon tab
+2. **In terminal:** Query what you need:
+   - `arcgispro layers` → list layers
+   - `arcgispro layer ""Parcels""` → layer details + fields
+   - `arcgispro context` → full markdown summary
+
+## Folder Contract
+
+The CLI looks for `.arcgispro/` in the current directory or ancestors:
+
+```
+.arcgispro/
+├── context/          # JSON files (layers.json, maps.json, etc.)
+├── images/           # PNG screenshots
+└── snapshot/         # Markdown summaries
+```
 
 ## Notes
 
-- The CLI is read-only and never modifies the ArcGIS Pro project
-- All outputs are written to `.arcgispro/` only
-- Re-run export from Pro to update stale context
+- The CLI is **read-only** - it never modifies your .aprx or data
+- Re-run Snapshot in Pro to refresh stale context
+- Partial layer name matching is supported: `arcgispro layer parc` finds ""Parcels""
 ";
             await File.WriteAllTextAsync(path, content, Encoding.UTF8);
         }
