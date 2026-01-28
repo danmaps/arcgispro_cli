@@ -15,31 +15,43 @@ That's it! The `install` command launches the add-in installer. Click "Install A
 
 1. Open a project in ArcGIS Pro
 2. Click **Snapshot** in the **CLI** ribbon tab
-3. A `.arcgispro/` folder is created next to your `.aprx` file containing:
-   - Project metadata (maps, layouts, geodatabases)
-   - Layer details (fields, feature counts, visibility, symbology type)
-   - Standalone tables and data connections
-   - Map/layout images as PNG
-   - Markdown summaries for AI consumption
-
-4. Use the CLI to inspect exports:
+3. A `.arcgispro/` folder is created next to your `.aprx` file
+4. Query the exported context:
    ```bash
    cd /path/to/your/project
-   arcgispro inspect
+   arcgispro layers              # What layers do I have?
+   arcgispro layer "Parcels"     # Tell me about this layer
+   arcgispro fields "Parcels"    # What fields are in it?
    ```
 
 ## CLI Commands
+
+### Setup Commands
 
 | Command | Description |
 |---------|-------------|
 | `arcgispro install` | Install the ProExporter add-in |
 | `arcgispro uninstall` | Show uninstall instructions |
-| `arcgispro inspect` | Print human-readable summary |
-| `arcgispro dump` | Validate context JSON files |
-| `arcgispro images` | Validate exported images |
-| `arcgispro snapshot` | Assemble full snapshot |
+| `arcgispro status` | Show export status and validate files |
 | `arcgispro clean` | Remove generated files |
-| `arcgispro open` | Select active project |
+| `arcgispro open` | Open folder or select project |
+
+### Query Commands
+
+| Command | Description |
+|---------|-------------|
+| `arcgispro project` | Show project info |
+| `arcgispro maps` | List all maps |
+| `arcgispro map [name]` | Show map details (default: active map) |
+| `arcgispro layers` | List all layers |
+| `arcgispro layers --broken` | List broken layers |
+| `arcgispro layer <name>` | Show layer details + field schema |
+| `arcgispro fields <name>` | Show just the field schema |
+| `arcgispro tables` | List standalone tables |
+| `arcgispro connections` | List data connections |
+| `arcgispro context` | Print full markdown summary |
+
+All query commands support `--json` for machine-readable output.
 
 ## Requirements
 
@@ -72,7 +84,7 @@ MIT
 
 ## Using with AI Agents
 
-This tool is designed to make ArcGIS Pro sessions observable for AI coding assistants. Here's how to use it with popular CLI-based agents.
+This tool is designed to make ArcGIS Pro sessions observable for AI coding assistants.
 
 ### What Gets Exported
 
@@ -92,66 +104,53 @@ When you click **Snapshot** in ArcGIS Pro, the `.arcgispro/` folder contains:
 │   ├── map_*.png          # Screenshots of each map view
 │   └── layout_*.png       # Screenshots of each layout
 └── snapshot/
-    └── context.md         # Human-readable summary (best for AI)
+    └── context.md         # Human-readable summary
 ```
 
 ### Claude Code / Copilot CLI / Gemini CLI
 
-These tools can read files from your working directory. Just navigate to your ArcGIS Pro project folder:
+These tools can read files and run commands in your working directory. Navigate to your ArcGIS Pro project folder and start your AI session:
 
 ```bash
 cd /path/to/your/project
-arcgispro inspect   # Verify exports exist
-
-# Then start your AI session
-claude               # or: copilot, gemini
+claude   # or: copilot, gemini
 ```
 
 **Example prompts:**
 
 ```
-Read .arcgispro/snapshot/context.md and summarize what layers are in this project.
+What layers are in this project?
+> AI runs: arcgispro layers
 
-Look at .arcgispro/context/layers.json and tell me which layers have 
-more than 100,000 features.
+What fields are in the Parcels layer?
+> AI runs: arcgispro fields "Parcels"
 
-Based on the field schemas in .arcgispro/context/layers.json, write a 
-Python script using arcpy to calculate a new field.
+Which layers have broken data sources?
+> AI runs: arcgispro layers --broken
 
-Look at .arcgispro/images/map_Map.png and describe what you see.
+Give me the full project context
+> AI runs: arcgispro context
+
+Look at the map screenshot and describe what you see
+> AI reads: .arcgispro/images/map_*.png
 ```
 
 ### Tips for Best Results
 
-1. **Run `arcgispro snapshot` before starting your AI session** - ensures context is fresh
+1. **Click Snapshot in Pro before starting your AI session** - ensures context is fresh
 
-2. **Point the agent to context.md first** - it's a concise summary:
-   ```
-   Read .arcgispro/snapshot/context.md to understand my ArcGIS Pro project.
-   ```
+2. **Ask naturally** - the CLI commands map to common questions:
+   - "What layers do I have?" → `arcgispro layers`
+   - "Tell me about the Parcels layer" → `arcgispro layer Parcels`
+   - "What's the schema?" → `arcgispro fields Parcels`
 
-3. **Use layers.json for detailed field info** - includes field names, types, and aliases:
-   ```
-   What fields are available in the "parcels" layer? Check .arcgispro/context/layers.json
-   ```
-
-4. **Share images for visual context** - map screenshots help AI understand your data:
-   ```
-   Look at .arcgispro/images/map_Map.png - what type of data is being displayed?
+3. **Use `--json` for programmatic access** - AI can parse structured output:
+   ```bash
+   arcgispro layers --json
+   arcgispro layer "Parcels" --json
    ```
 
-### Automated Workflows
-
-You can script exports for CI/CD or batch processing:
-
-```bash
-# Export context from Pro (requires clicking Snapshot in Pro first)
-# Then validate and use in automation:
-arcgispro dump && arcgispro images && echo "Exports valid"
-
-# Clean up after processing
-arcgispro clean --all
-```
+4. **Check images for visual context** - map screenshots help AI understand spatial data
 
 ### Custom Agent Integration
 

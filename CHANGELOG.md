@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-01-28
+
+### Changed
+- **Breaking:** Restructured CLI commands to be query-focused
+- Removed `inspect`, `dump`, `images`, `snapshot` commands (add-in handles export)
+- Added query commands: `project`, `maps`, `map`, `layers`, `layer`, `fields`, `tables`, `connections`, `context`
+- Added `status` command (replaces dump/images validation)
+- All query commands support `--json` flag for machine-readable output
+- `layers` command supports `--broken` and `--map` filters
+- `layer` and `fields` commands support partial name matching
+- Updated README with clearer examples and natural language prompts
+
 ## [0.1.4] - 2026-01-28
 
 ### Changed
