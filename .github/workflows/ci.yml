@@ -51,5 +51,5 @@ jobs:
       - name: Check dist contents
         run: |
           ls -la cli/dist/
-          # Verify the addin is included
-          python -c "import zipfile; z=zipfile.ZipFile('cli/dist/arcgispro_cli-0.1.0-py3-none-any.whl'); print([f for f in z.namelist() if 'addin' in f])"
+          # Verify the addin is included (use glob pattern for version)
+          python -c "import zipfile; import glob; whl=glob.glob('cli/dist/*.whl')[0]; z=zipfile.ZipFile(whl); print([f for f in z.namelist() if 'addin' in f])"
