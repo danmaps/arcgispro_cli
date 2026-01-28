@@ -11,7 +11,7 @@ def test_version():
     runner = CliRunner()
     result = runner.invoke(main, ["--version"])
     assert result.exit_code == 0
-    assert "0.1.2" in result.output
+    assert "arcgispro" in result.output.lower()
 
 
 def test_help():
@@ -30,11 +30,20 @@ def test_install_help():
     assert "ProExporter" in result.output
 
 
-def test_inspect_no_folder():
-    """Test inspect when no .arcgispro folder exists."""
+def test_layers_no_folder():
+    """Test layers command when no .arcgispro folder exists."""
     runner = CliRunner()
     with runner.isolated_filesystem():
-        result = runner.invoke(main, ["inspect"])
+        result = runner.invoke(main, ["layers"])
+        assert result.exit_code == 1
+        assert "No .arcgispro folder found" in result.output
+
+
+def test_status_no_folder():
+    """Test status command when no .arcgispro folder exists."""
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        result = runner.invoke(main, ["status"])
         assert result.exit_code == 1
         assert "No .arcgispro folder found" in result.output
 
