@@ -1,0 +1,21 @@
+# Visual Studio
+.vs/
+bin/
+obj/
+*.user
+*.suo
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+.venv/
+venv/
+
+# ArcGIS Pro
+*.esriAddinX
+
+# OS
+.DS_Store
+Thumbs.db

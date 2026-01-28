@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ArcGIS defaultAssembly="ProExporter.dll"
+        defaultNamespace="ProExporter"
+        xmlns="http://schemas.esri.com/DADF/Registry"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
+
+  <AddInInfo id="{f7797648-ae51-4389-bb7b-489b6c635c87}" version="1.0" desktopVersion="3.6.59527" product="ArcGISPro">
+    <Name>ArcGIS Pro CLI</Name>   
+    <Description>Exports ArcGIS Pro session context for AI agents and CLI tools</Description>
+    <Image>Images\AddinDesktop32.png</Image>
+    <Author>mcveydb</Author>
+    <Company>Danny McVey</Company>
+    <Date>1/28/2026 10:16:34 AM</Date>
+    <Subject>Framework, Map Exploration</Subject>
+  </AddInInfo>
+
+  <modules>
+    <insertModule id="ProExporter_Module" className="Module1" autoLoad="false" caption="Module1">
+      <!-- uncomment to have the control hosted on a separate tab-->
+      <tabs>
+        <!--<tab id="ProExporter_Tab1" caption="New Tab">
+          <group refID="ProExporter_Group1"/>
+        </tab>-->
+      </tabs>
+              
+      <groups>
+        <group id="ProExporter_Group1" caption="ArcGIS Pro CLI" appearsOnAddInTab="true">
+          <button refID="ProExporter_SnapshotButton" size="large" />
+          <button refID="ProExporter_DumpContextButton" size="middle" />
+          <button refID="ProExporter_ExportImagesButton" size="middle" />
+          <button refID="ProExporter_OpenFolderButton" size="middle" />
+        </group>
+      </groups>
+      
+      <controls>
+        <button id="ProExporter_SnapshotButton" 
+                caption="Snapshot" 
+                className="SnapshotButton" 
+                loadOnClick="true" 
+                smallImage="Images\AddInDesktop16.png" 
+                largeImage="Images\AddInDesktop32.png">
+          <tooltip heading="Export Snapshot">
+            Export full context (JSON, Markdown, images) to .arcgispro/ folder
+            <disabledText>Open a project first</disabledText>
+          </tooltip>
+        </button>
+        <button id="ProExporter_DumpContextButton" 
+                caption="Dump Context" 
+                className="DumpContextButton" 
+                loadOnClick="true" 
+                smallImage="Images\AddInDesktop16.png" 
+                largeImage="Images\AddInDesktop32.png">
+          <tooltip heading="Dump Context">
+            Export project/map/layer metadata as JSON files
+            <disabledText>Open a project first</disabledText>
+          </tooltip>
+        </button>
+        <button id="ProExporter_ExportImagesButton" 
+                caption="Export Images" 
+                className="ExportImagesButton" 
+                loadOnClick="true" 
+                smallImage="Images\AddInDesktop16.png" 
+                largeImage="Images\AddInDesktop32.png">
+          <tooltip heading="Export Images">
+            Export map views and layouts as PNG images
+            <disabledText>Open a project first</disabledText>
+          </tooltip>
+        </button>
+        <button id="ProExporter_OpenFolderButton" 
+                caption="Open Folder" 
+                className="OpenFolderButton" 
+                loadOnClick="true" 
+                smallImage="Images\AddInDesktop16.png" 
+                largeImage="Images\AddInDesktop32.png">
+          <tooltip heading="Open Output Folder">
+            Open the .arcgispro/ output folder in Explorer
+          </tooltip>
+        </button>
+      </controls>
+      
+    </insertModule>
+  </modules>
+</ArcGIS>
