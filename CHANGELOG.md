@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-01-28
+
+### Changed
+- Add-in now appears on its own "CLI" tab instead of the generic "Add-In" tab
+
+## [0.1.3] - 2026-01-28
+
+### Fixed
+- PyPI package now uses root README for better documentation
+
 ## [0.1.2] - 2026-01-28
 
 ### Fixed

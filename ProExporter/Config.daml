@@ -17,15 +17,14 @@
 
   <modules>
     <insertModule id="ProExporter_Module" className="Module1" autoLoad="false" caption="Module1">
-      <!-- uncomment to have the control hosted on a separate tab-->
       <tabs>
-        <!--<tab id="ProExporter_Tab1" caption="New Tab">
+        <tab id="ProExporter_Tab1" caption="CLI">
           <group refID="ProExporter_Group1"/>
-        </tab>-->
+        </tab>
       </tabs>
               
       <groups>
-        <group id="ProExporter_Group1" caption="ArcGIS Pro CLI" appearsOnAddInTab="true">
+        <group id="ProExporter_Group1" caption="ArcGIS Pro CLI" appearsOnAddInTab="false">
           <button refID="ProExporter_SnapshotButton" size="large" />
           <button refID="ProExporter_DumpContextButton" size="middle" />
           <button refID="ProExporter_ExportImagesButton" size="middle" />

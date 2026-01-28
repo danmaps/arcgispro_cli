@@ -19,3 +19,6 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local notes (not for repo)
+.marketing.md
