@@ -2,12 +2,14 @@
 
 Make ArcGIS Pro sessions observable for AI agents and automation tools.
 
-## Overview
+## Quick Start
 
-This project consists of two components:
+```bash
+pip install arcgispro-cli
+arcgispro install
+```
 
-1. **ProExporter** - An ArcGIS Pro add-in that exports session context to disk
-2. **arcgispro-cli** - A Python CLI tool that reads and validates the exports
+That's it! The `install` command launches the add-in installer. Click "Install Add-In" and restart ArcGIS Pro.
 
 ## How It Works
 
@@ -26,25 +28,12 @@ This project consists of two components:
    arcgispro inspect
    ```
 
-## Installation
-
-### ArcGIS Pro Add-in
-
-1. Build `ProExporter.sln` in Visual Studio (Release configuration)
-2. Double-click `ProExporter.esriAddinX` to install
-3. Restart ArcGIS Pro
-
-### Python CLI
-
-```bash
-cd cli
-pip install -e .
-```
-
 ## CLI Commands
 
 | Command | Description |
 |---------|-------------|
+| `arcgispro install` | Install the ProExporter add-in |
+| `arcgispro uninstall` | Show uninstall instructions |
 | `arcgispro inspect` | Print human-readable summary |
 | `arcgispro dump` | Validate context JSON files |
 | `arcgispro images` | Validate exported images |
@@ -54,9 +43,26 @@ pip install -e .
 
 ## Requirements
 
-- ArcGIS Pro 3.x with .NET 8 SDK
-- Python 3.10+
+- Windows 10/11
+- ArcGIS Pro 3.x
+- Python 3.9+
+
+## Development
+
+To build the add-in from source, you'll need:
 - Visual Studio 2022 with ArcGIS Pro SDK extension
+- .NET 8 SDK
+
+```bash
+# Clone and install CLI in dev mode
+git clone https://github.com/danmaps/arcgispro_cli.git
+cd arcgispro_cli/cli
+pip install -e .
+
+# Build add-in in Visual Studio
+# Open ProExporter/ProExporter.sln
+# Build → Build Solution (Release)
+```
 
 ## License
 

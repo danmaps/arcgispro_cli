@@ -43,3 +43,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["arcgispro_cli"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"arcgispro_cli/addin" = "arcgispro_cli/addin"

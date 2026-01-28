@@ -14,7 +14,7 @@ dist/
 venv/
 
 # ArcGIS Pro
-*.esriAddinX
+# *.esriAddinX  # Commented out - we bundle the addin in the CLI package
 
 # OS
 .DS_Store
