@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Desktop.Core;
@@ -161,6 +163,70 @@ namespace ProExporter
             }
 
             ExportController.OpenOutputFolder();
+        }
+    }
+
+    /// <summary>
+    /// Button: Open terminal at project folder with ArcGIS Pro Python env activated
+    /// </summary>
+    public class OpenTerminalButton : Button
+    {
+        protected override void OnClick()
+        {
+            if (!ExportController.CanExport())
+            {
+                MessageBox.Show("Please open a project first.", "ArcGIS Pro CLI", 
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            OpenTerminalWithProEnv();
+        }
+
+        private void OpenTerminalWithProEnv()
+        {
+            var project = Project.Current;
+            if (project == null) return;
+
+            var projectDir = Path.GetDirectoryName(project.URI);
+            if (string.IsNullOrEmpty(projectDir)) return;
+
+            var proPath = Environment.GetEnvironmentVariable("ProgramFiles") ?? @"C:\Program Files";
+            var scriptsPath = Path.Combine(proPath, "ArcGIS", "Pro", "bin", "Python", "Scripts");
+            var activateBat = Path.Combine(scriptsPath, "activate.bat");
+            var pythonEnvUtils = Path.Combine(proPath, "ArcGIS", "Pro", "bin", "PythonEnvUtils.exe");
+
+            string args;
+            if (File.Exists(activateBat) && File.Exists(pythonEnvUtils))
+            {
+                // Replicate proenv.bat logic but cd to project folder instead of env folder
+                // 1. Get active env from PythonEnvUtils.exe
+                // 2. Set CONDA_SKIPCHECK=1 so activate.bat uses fast path
+                // 3. Call activate.bat with the env path
+                // 4. cd to project folder
+                args = $"/k \"set CONDA_SKIPCHECK=1 && for /f \"delims=\" %i in ('\"{pythonEnvUtils}\"') do @call \"{activateBat}\" \"%i\" && cd /d \"{projectDir}\"\"";
+            }
+            else
+            {
+                // Fallback: just open terminal at project folder
+                args = $"/k cd /d \"{projectDir}\"";
+            }
+
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = args,
+                    UseShellExecute = true,
+                    WorkingDirectory = projectDir
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to open terminal: {ex.Message}", "ArcGIS Pro CLI",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }

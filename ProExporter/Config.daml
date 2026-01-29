@@ -29,6 +29,7 @@
           <button refID="ProExporter_DumpContextButton" size="middle" />
           <button refID="ProExporter_ExportImagesButton" size="middle" />
           <button refID="ProExporter_OpenFolderButton" size="middle" />
+          <button refID="ProExporter_OpenTerminalButton" size="middle" />
         </group>
       </groups>
       
@@ -74,6 +75,16 @@
                 largeImage="Images\AddInDesktop32.png">
           <tooltip heading="Open Output Folder">
             Open the .arcgispro/ output folder in Explorer
+          </tooltip>
+        </button>
+        <button id="ProExporter_OpenTerminalButton" 
+                caption="Terminal" 
+                className="OpenTerminalButton" 
+                loadOnClick="true" 
+                smallImage="Images\AddInDesktop16.png" 
+                largeImage="Images\AddInDesktop32.png">
+          <tooltip heading="Open Terminal">
+            Open terminal at project folder with ArcGIS Pro Python environment activated
           </tooltip>
         </button>
       </controls>
