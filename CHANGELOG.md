@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-01-29
+
+### Added
+- **CLI:** `notebooks` command to list Jupyter notebooks in the project
+- **Add-in:** Exports notebook metadata (name, path, description, cell breakdown) to `notebooks.json`
+- Notebook descriptions extracted from first markdown cell (falls back to first code cell)
+
 ## [0.3.0] - 2026-01-29
 
 ### Added
