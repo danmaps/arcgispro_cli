@@ -3,6 +3,7 @@
 import os
 import subprocess
 from pathlib import Path
+from typing import Optional
 
 import click
 from rich.console import Console
@@ -16,7 +17,7 @@ PRO_PATHS = [
 ]
 
 
-def find_arcgis_pro() -> Path | None:
+def find_arcgis_pro() -> Optional[Path]:
     """Find ArcGISPro.exe."""
     for path in PRO_PATHS:
         if path.exists():
@@ -24,7 +25,7 @@ def find_arcgis_pro() -> Path | None:
     return None
 
 
-def find_aprx_in_dir(directory: Path) -> Path | None:
+def find_aprx_in_dir(directory: Path) -> Optional[Path]:
     """Find a .aprx file in the given directory."""
     aprx_files = list(directory.glob("*.aprx"))
     if len(aprx_files) == 1:
