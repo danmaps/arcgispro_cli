@@ -64,6 +64,10 @@ namespace ProExporter
             await WriteJsonAsync(layoutsPath, context.Layouts);
             files.Add(layoutsPath);
 
+            var notebooksPath = Path.Combine(contextFolder, "notebooks.json");
+            await WriteJsonAsync(notebooksPath, context.Notebooks);
+            files.Add(notebooksPath);
+
             // Write human-readable markdown
             var contextMdPath = Path.Combine(snapshotFolder, "context.md");
             await WriteContextMarkdownAsync(contextMdPath, context);
@@ -217,6 +221,32 @@ namespace ProExporter
                 sb.AppendLine();
             }
 
+            // Notebooks section
+            if (context.Notebooks.Any())
+            {
+                sb.AppendLine("## Notebooks");
+                sb.AppendLine();
+                
+                foreach (var notebook in context.Notebooks)
+                {
+                    sb.AppendLine($"### {notebook.Name}");
+                    sb.AppendLine();
+                    sb.AppendLine($"- **Path:** `{notebook.Path}`");
+                    sb.AppendLine($"- **Cells:** {notebook.CellCount} ({string.Join(", ", notebook.CellBreakdown.Select(kv => $"{kv.Value} {kv.Key}"))})");
+                    if (notebook.LastModified.HasValue)
+                        sb.AppendLine($"- **Modified:** {notebook.LastModified:yyyy-MM-dd HH:mm}");
+                    if (!string.IsNullOrEmpty(notebook.Description))
+                    {
+                        sb.AppendLine();
+                        sb.AppendLine("**Description:**");
+                        sb.AppendLine("```");
+                        sb.AppendLine(notebook.Description.Length > 300 ? notebook.Description.Substring(0, 297) + "..." : notebook.Description);
+                        sb.AppendLine("```");
+                    }
+                    sb.AppendLine();
+                }
+            }
+
             await File.WriteAllTextAsync(path, sb.ToString(), Encoding.UTF8);
         }
 
@@ -270,6 +300,7 @@ Ask the user to click **Snapshot** in ArcGIS Pro when:
 | `arcgispro fields ""Name""` | Just the fields for a layer |
 | `arcgispro tables` | Standalone tables |
 | `arcgispro connections` | Database/folder connections |
+| `arcgispro notebooks` | Jupyter notebooks in project |
 | `arcgispro context` | Full markdown dump (good for pasting) |
 | `arcgispro status` | Validate export files |
 
@@ -286,7 +317,8 @@ Ask the user to click **Snapshot** in ArcGIS Pro when:
 │   ├── layers.json     # All layers with field schemas
 │   ├── tables.json     # Standalone tables
 │   ├── connections.json # Data connections
-│   └── layouts.json    # Print layouts
+│   ├── layouts.json    # Print layouts
+│   └── notebooks.json  # Jupyter notebooks
 ├── images/
 │   ├── map_*.png       # Screenshots of each map view
 │   └── layout_*.png    # Screenshots of each layout
@@ -311,6 +343,13 @@ Ask the user to click **Snapshot** in ArcGIS Pro when:
 - `isActiveMap` — true = user is currently viewing this map
 - `scale` — Current map scale (1:X)
 - `extent` — View bounds (xmin, ymin, xmax, ymax)
+
+### notebooks.json
+- `name` — Notebook filename
+- `path` — Full path to .ipynb file
+- `description` — First markdown cell (or code cell if no markdown)
+- `cellCount` — Total number of cells
+- `cellBreakdown` — Count by type (markdown, code)
 
 ## Tips
 

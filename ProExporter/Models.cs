@@ -134,6 +134,19 @@ namespace ProExporter
     }
 
     /// <summary>
+    /// Notebook information
+    /// </summary>
+    public class NotebookInfo
+    {
+        public string Name { get; set; }
+        public string Path { get; set; }
+        public string Description { get; set; }
+        public int CellCount { get; set; }
+        public Dictionary<string, int> CellBreakdown { get; set; } = new Dictionary<string, int>();
+        public DateTime? LastModified { get; set; }
+    }
+
+    /// <summary>
     /// Complete export context containing all collected information
     /// </summary>
     public class ExportContext
@@ -145,6 +158,7 @@ namespace ProExporter
         public List<TableInfo> Tables { get; set; } = new List<TableInfo>();
         public List<ConnectionInfo> Connections { get; set; } = new List<ConnectionInfo>();
         public List<LayoutInfo> Layouts { get; set; } = new List<LayoutInfo>();
+        public List<NotebookInfo> Notebooks { get; set; } = new List<NotebookInfo>();
     }
 
     /// <summary>

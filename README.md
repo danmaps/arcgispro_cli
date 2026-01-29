@@ -46,6 +46,7 @@ arcgispro install
 | `arcgispro fields <name>` | Just the fields |
 | `arcgispro tables` | Standalone tables |
 | `arcgispro connections` | Data connections |
+| `arcgispro notebooks` | Jupyter notebooks in project |
 | `arcgispro context` | Full markdown dump |
 
 Add `--json` to any query command for machine-readable output.
@@ -105,7 +106,8 @@ When you click **Snapshot** in ArcGIS Pro, the `.arcgispro/` folder contains:
 │   ├── layers.json        # Full layer details with field schemas
 │   ├── tables.json        # Standalone tables
 │   ├── connections.json   # Database connections
-│   └── layouts.json       # Print layouts
+│   ├── layouts.json       # Print layouts
+│   └── notebooks.json     # Jupyter notebooks
 ├── images/
 │   ├── map_*.png          # Screenshots of each map view
 │   └── layout_*.png       # Screenshots of each layout

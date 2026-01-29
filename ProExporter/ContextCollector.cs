@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
@@ -76,6 +78,9 @@ namespace ProExporter
 
                 // Collect database connections
                 context.Connections = CollectConnections();
+
+                // Collect notebooks
+                context.Notebooks = CollectNotebooks();
             });
             
             return context ?? new ExportContext { Meta = new MetaInfo() };
@@ -536,6 +541,147 @@ namespace ProExporter
             catch { }
 
             return dataStore.GetType().Name;
+        }
+
+        /// <summary>
+        /// Collect notebooks from the project
+        /// </summary>
+        private static List<NotebookInfo> CollectNotebooks()
+        {
+            var notebooks = new List<NotebookInfo>();
+            var project = Project.Current;
+            if (project == null) return notebooks;
+
+            try
+            {
+                // Get all project items and filter for notebooks
+                foreach (var item in project.GetItems<Item>())
+                {
+                    // Check for notebook items by extension or type
+                    if (item.Path != null && 
+                        (item.Path.EndsWith(".ipynb", StringComparison.OrdinalIgnoreCase) ||
+                         item.TypeID?.Contains("notebook", StringComparison.OrdinalIgnoreCase) == true))
+                    {
+                        var notebookInfo = ParseNotebook(item.Name, item.Path);
+                        if (notebookInfo != null)
+                        {
+                            notebooks.Add(notebookInfo);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Notebook enumeration may fail
+            }
+
+            return notebooks;
+        }
+
+        /// <summary>
+        /// Parse a notebook file to extract metadata and description
+        /// </summary>
+        private static NotebookInfo ParseNotebook(string name, string path)
+        {
+            var info = new NotebookInfo
+            {
+                Name = name,
+                Path = path
+            };
+
+            try
+            {
+                // Get file info
+                var fileInfo = new FileInfo(path);
+                if (fileInfo.Exists)
+                {
+                    info.LastModified = fileInfo.LastWriteTimeUtc;
+
+                    // Read and parse the notebook JSON
+                    var json = File.ReadAllText(path);
+                    using (var doc = JsonDocument.Parse(json))
+                    {
+                        var root = doc.RootElement;
+                        
+                        if (root.TryGetProperty("cells", out var cells) && cells.ValueKind == JsonValueKind.Array)
+                        {
+                            info.CellCount = cells.GetArrayLength();
+                            
+                            // Count cells by type
+                            string firstMarkdownContent = null;
+                            string firstCodeContent = null;
+
+                            foreach (var cell in cells.EnumerateArray())
+                            {
+                                if (cell.TryGetProperty("cell_type", out var cellType))
+                                {
+                                    var type = cellType.GetString() ?? "unknown";
+                                    
+                                    if (info.CellBreakdown.ContainsKey(type))
+                                        info.CellBreakdown[type]++;
+                                    else
+                                        info.CellBreakdown[type] = 1;
+
+                                    // Capture first markdown or code cell for description
+                                    if (cell.TryGetProperty("source", out var source))
+                                    {
+                                        var content = GetCellContent(source);
+                                        
+                                        if (type == "markdown" && firstMarkdownContent == null && !string.IsNullOrWhiteSpace(content))
+                                        {
+                                            firstMarkdownContent = content;
+                                        }
+                                        else if (type == "code" && firstCodeContent == null && !string.IsNullOrWhiteSpace(content))
+                                        {
+                                            firstCodeContent = content;
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Use first markdown cell, fall back to first code cell
+                            var description = firstMarkdownContent ?? firstCodeContent;
+                            if (description != null)
+                            {
+                                // Truncate to ~500 chars
+                                info.Description = description.Length > 500 
+                                    ? description.Substring(0, 497) + "..." 
+                                    : description;
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Failed to parse notebook, return basic info
+            }
+
+            return info;
+        }
+
+        /// <summary>
+        /// Extract cell content from source property (can be string or array of strings)
+        /// </summary>
+        private static string GetCellContent(JsonElement source)
+        {
+            if (source.ValueKind == JsonValueKind.String)
+            {
+                return source.GetString();
+            }
+            else if (source.ValueKind == JsonValueKind.Array)
+            {
+                var lines = new List<string>();
+                foreach (var line in source.EnumerateArray())
+                {
+                    if (line.ValueKind == JsonValueKind.String)
+                    {
+                        lines.Add(line.GetString());
+                    }
+                }
+                return string.Join("", lines);
+            }
+            return null;
         }
     }
 }

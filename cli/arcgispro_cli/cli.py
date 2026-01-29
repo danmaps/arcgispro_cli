@@ -19,6 +19,7 @@ Commands:
     arcgispro fields <name> - Show field schema for a layer
     arcgispro tables        - List standalone tables
     arcgispro connections   - List data connections
+    arcgispro notebooks     - List Jupyter notebooks
     arcgispro context       - Print full markdown summary
 """
 
@@ -26,7 +27,7 @@ import click
 from rich.console import Console
 
 from . import __version__
-from .commands import clean, open_project, install, query, launch
+from .commands import clean, open_project, install, query, launch, notebooks
 
 console = Console()
 
@@ -70,6 +71,7 @@ main.add_command(query.layer_cmd, name="layer")
 main.add_command(query.fields_cmd, name="fields")
 main.add_command(query.tables_cmd, name="tables")
 main.add_command(query.connections_cmd, name="connections")
+main.add_command(notebooks.notebooks_cmd, name="notebooks")
 main.add_command(query.context_cmd, name="context")
 
 
