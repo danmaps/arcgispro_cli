@@ -5,7 +5,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
 
-  <AddInInfo id="{f7797648-ae51-4389-bb7b-489b6c635c87}" version="0.3.1" desktopVersion="3.6.59527" product="ArcGISPro">
+  <AddInInfo id="{f7797648-ae51-4389-bb7b-489b6c635c87}" version="0.3.2" desktopVersion="3.6.59527" product="ArcGISPro">
     <Name>ArcGIS Pro CLI</Name>   
     <Description>Exports ArcGIS Pro session context for AI agents and CLI tools</Description>
     <Image>Images\AddinDesktop32.png</Image>

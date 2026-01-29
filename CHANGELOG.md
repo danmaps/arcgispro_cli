@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-01-29
+
+### Added
+- **Add-in:** Settings page in Pro's Options backstage menu
+- **Add-in:** Auto-export on project open (optional, disabled by default)
+- **Add-in:** Safety checks for auto-export (local drive only, max layers threshold)
+- **Add-in:** Export content toggles (images, notebooks, fields)
+
 ## [0.3.1] - 2026-01-29
 
 ### Added
