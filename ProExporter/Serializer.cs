@@ -69,14 +69,10 @@ namespace ProExporter
             await WriteContextMarkdownAsync(contextMdPath, context);
             files.Add(contextMdPath);
 
-            // Write skill files
-            var contextSkillPath = Path.Combine(snapshotFolder, "CONTEXT_SKILL.md");
-            await WriteContextSkillAsync(contextSkillPath);
-            files.Add(contextSkillPath);
-
-            var agentSkillPath = Path.Combine(snapshotFolder, "AGENT_TOOL_SKILL.md");
-            await WriteAgentToolSkillAsync(agentSkillPath);
-            files.Add(agentSkillPath);
+            // Write AGENTS.md at root for discoverability
+            var agentsPath = Path.Combine(outputFolder, "AGENTS.md");
+            await WriteAgentsFileAsync(agentsPath, context);
+            files.Add(agentsPath);
 
             // Write active project marker
             if (context.Project != null)
@@ -225,154 +221,103 @@ namespace ProExporter
         }
 
         /// <summary>
-        /// Write the CONTEXT_SKILL.md file explaining how to use the exported context
+        /// Write the AGENTS.md file - a skill file for AI agents
         /// </summary>
-        private static async Task WriteContextSkillAsync(string path)
+        private static async Task WriteAgentsFileAsync(string path, ExportContext context)
         {
-            var content = @"# How to Use This Context
+            var timestamp = context.Meta.ExportedAt.ToString("yyyy-MM-dd HH:mm:ss");
+            var content = $@"# ArcGIS Pro Session Context
 
-This folder contains exported context from an ArcGIS Pro session. Use this information to understand what the user is working on.
+> **Snapshot taken:** {timestamp} UTC
+> **Use the `arcgispro` CLI to query this data.**
+
+## Quick Start
+
+```bash
+arcgispro layers              # List all layers
+arcgispro layer ""LayerName""   # Layer details + fields  
+arcgispro fields ""LayerName""  # Just the fields
+arcgispro context             # Full markdown summary
+```
+
+Add `--json` to any command for structured output.
+
+## When to Request a New Snapshot
+
+Ask the user to click **Snapshot** in ArcGIS Pro when:
+- You need current layer/field information before making changes
+- User mentions they modified something in Pro
+- Data seems stale (check timestamp above)
+- You see `isBroken: true` and want to verify it's still broken
+
+## What NOT to Assume
+
+- **Pro state matches this export** — User may have added/removed layers since snapshot
+- **All data sources are valid** — Check `isBroken` field in layer info
+- **Field names are exact** — Pro field names are case-insensitive but aliases may differ
+- **Feature counts are current** — Counts are from snapshot time, not live
+
+## Available Commands
+
+| Command | Purpose |
+|---------|---------|
+| `arcgispro project` | Project name, path, geodatabases |
+| `arcgispro maps` | List all maps |
+| `arcgispro map ""Name""` | Map details (scale, extent, SR) |
+| `arcgispro layers` | List all layers across all maps |
+| `arcgispro layers --broken` | Only layers with broken data sources |
+| `arcgispro layer ""Name""` | Layer details + field schema |
+| `arcgispro fields ""Name""` | Just the fields for a layer |
+| `arcgispro tables` | Standalone tables |
+| `arcgispro connections` | Database/folder connections |
+| `arcgispro context` | Full markdown dump (good for pasting) |
+| `arcgispro status` | Validate export files |
 
 ## File Structure
 
 ```
 .arcgispro/
-├── meta.json           # Export metadata (timestamp, version)
-├── active_project.txt  # Path to the active .aprx project
+├── AGENTS.md           # This file (start here!)
+├── meta.json           # Export timestamp, tool version
+├── active_project.txt  # Path to the .aprx file
 ├── context/
-│   ├── project.json    # Project-level info
-│   ├── maps.json       # All maps in the project
-│   ├── layers.json     # All layers with metadata
+│   ├── project.json    # Project metadata
+│   ├── maps.json       # All maps with extents/scales
+│   ├── layers.json     # All layers with field schemas
 │   ├── tables.json     # Standalone tables
-│   ├── connections.json # Database/folder connections
+│   ├── connections.json # Data connections
 │   └── layouts.json    # Print layouts
-├── snapshot/
-│   ├── context.md      # Human-readable summary (start here!)
-│   ├── CONTEXT_SKILL.md # This file
-│   └── AGENT_TOOL_SKILL.md # CLI usage guide
-└── images/
-    ├── map_*.png       # Map view screenshots
-    └── layout_*.png    # Layout exports
+├── images/
+│   ├── map_*.png       # Screenshots of each map view
+│   └── layout_*.png    # Screenshots of each layout
+└── snapshot/
+    └── context.md      # Human-readable summary
 ```
 
-## Quick Start
-
-1. **Read `snapshot/context.md`** for a human-readable overview
-2. **Check `images/`** to see what the map looks like
-3. **Parse `context/*.json`** for detailed programmatic access
-
-## Key Fields
+## Key JSON Fields
 
 ### layers.json
-- `name`: Layer display name
-- `layerType`: FeatureLayer, RasterLayer, GroupLayer, etc.
-- `geometryType`: Point, Polyline, Polygon
-- `featureCount`: Number of features (may be null if unavailable)
-- `selectionCount`: Currently selected features
-- `isVisible`: Whether layer is visible in the map
-- `isBroken`: Whether the data source is broken/missing
-- `definitionQuery`: SQL filter applied to the layer
-- `fields`: Array of field definitions
+- `name` — Display name
+- `layerType` — FeatureLayer, RasterLayer, GroupLayer, etc.
+- `geometryType` — Point, Polyline, Polygon (null for non-spatial)
+- `featureCount` — Feature count (may be null)
+- `selectionCount` — Currently selected features
+- `isVisible` — Layer visibility in map
+- `isBroken` — Data source is missing/broken
+- `definitionQuery` — SQL filter on the layer
+- `fields[]` — Array of field definitions
 
-### maps.json
-- `isActiveMap`: true for the currently displayed map
-- `scale`: Current map scale (1:X)
-- `extent`: Current view extent (xmin, ymin, xmax, ymax)
+### maps.json  
+- `isActiveMap` — true = user is currently viewing this map
+- `scale` — Current map scale (1:X)
+- `extent` — View bounds (xmin, ymin, xmax, ymax)
 
 ## Tips
 
-- The `isActiveMap` flag tells you which map the user is looking at
-- Check `selectionCount` to see if the user has selected features
-- `isBroken: true` indicates a data source problem
-- Field information is only available for feature layers with accessible data sources
-";
-            await File.WriteAllTextAsync(path, content, Encoding.UTF8);
-        }
-
-        /// <summary>
-        /// Write the AGENT_TOOL_SKILL.md file explaining CLI usage
-        /// </summary>
-        private static async Task WriteAgentToolSkillAsync(string path)
-        {
-            var content = @"# ArcGIS Pro CLI Tool
-
-## Two Components, Clear Roles
-
-| Component | Role | What it does |
-|-----------|------|--------------|
-| **ProExporter Add-in** | Context exfiltration | Exports session state from ArcGIS Pro to disk |
-| **arcgispro CLI** | Query interface | Reads exported data and answers questions |
-
-The add-in **exports**. The CLI **queries**. Neither modifies your ArcGIS Pro project.
-
-## Installation
-
-```bash
-pip install arcgispro-cli
-arcgispro install   # Installs the add-in
-```
-
-## Query Commands
-
-The CLI is query-focused. Ask it questions about the exported context:
-
-```bash
-# What's in this project?
-arcgispro project
-arcgispro maps
-arcgispro layers
-
-# Tell me about a specific layer
-arcgispro layer ""Parcels""
-arcgispro fields ""Parcels""
-
-# Find problems
-arcgispro layers --broken
-
-# Get everything (for pasting to AI chat)
-arcgispro context
-```
-
-All query commands support `--json` for machine-readable output:
-```bash
-arcgispro layers --json
-arcgispro layer ""Parcels"" --json
-```
-
-## Setup Commands
-
-```bash
-arcgispro install     # Install the add-in
-arcgispro uninstall   # Show uninstall instructions
-arcgispro status      # Validate exported files
-arcgispro clean       # Remove exported files
-arcgispro open        # Open export folder
-```
-
-## Workflow
-
-1. **In ArcGIS Pro:** Click ""Snapshot"" in the **CLI** ribbon tab
-2. **In terminal:** Query what you need:
-   - `arcgispro layers` → list layers
-   - `arcgispro layer ""Parcels""` → layer details + fields
-   - `arcgispro context` → full markdown summary
-
-## Folder Contract
-
-The CLI looks for `.arcgispro/` in the current directory or ancestors:
-
-```
-.arcgispro/
-├── context/          # JSON files (layers.json, maps.json, etc.)
-├── images/           # PNG screenshots
-└── snapshot/         # Markdown summaries
-```
-
-## Notes
-
-- The CLI is **read-only** - it never modifies your .aprx or data
-- Re-run Snapshot in Pro to refresh stale context
-- Partial layer name matching is supported: `arcgispro layer parc` finds ""Parcels""
+- Use `arcgispro layer ""partial""` — partial name matching works
+- Check `selectionCount` to see if user has features selected
+- The CLI is **read-only** — it never modifies the .aprx or data
+- Run from the project folder or any subfolder
 ";
             await File.WriteAllTextAsync(path, content, Encoding.UTF8);
         }

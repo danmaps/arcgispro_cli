@@ -97,6 +97,7 @@ When you click **Snapshot** in ArcGIS Pro, the `.arcgispro/` folder contains:
 
 ```
 .arcgispro/
+├── AGENTS.md              # AI agent skill file (start here!)
 ├── meta.json              # Export timestamp, tool version
 ├── context/
 │   ├── project.json       # Project name, path, geodatabases
@@ -111,6 +112,8 @@ When you click **Snapshot** in ArcGIS Pro, the `.arcgispro/` folder contains:
 └── snapshot/
     └── context.md         # Human-readable summary
 ```
+
+The `AGENTS.md` file teaches AI agents how to use the CLI and interpret the exported data — no user explanation needed.
 
 ### Claude Code / Copilot CLI / Gemini CLI
 
