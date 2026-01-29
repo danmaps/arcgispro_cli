@@ -8,6 +8,7 @@ Commands:
     arcgispro status        - Show export status and validate files
     arcgispro clean         - Remove generated files
     arcgispro open          - Open folder or select project
+    arcgispro launch        - Launch ArcGIS Pro
     
     # Query
     arcgispro project       - Show project info
@@ -25,7 +26,7 @@ import click
 from rich.console import Console
 
 from . import __version__
-from .commands import clean, open_project, install, query
+from .commands import clean, open_project, install, query, launch
 
 console = Console()
 
@@ -58,6 +59,7 @@ main.add_command(install.uninstall_cmd, name="uninstall")
 main.add_command(query.status_cmd, name="status")
 main.add_command(clean.clean_cmd, name="clean")
 main.add_command(open_project.open_cmd, name="open")
+main.add_command(launch.launch_cmd, name="launch")
 
 # Query commands
 main.add_command(query.project_cmd, name="project")

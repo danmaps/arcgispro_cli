@@ -36,6 +36,7 @@ dev = [
 
 [project.scripts]
 arcgispro = "arcgispro_cli.cli:main"
+agp = "arcgispro_cli.cli:main"
 
 [build-system]
 requires = ["hatchling"]

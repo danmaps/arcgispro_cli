@@ -28,9 +28,10 @@ arcgispro install
 |---------|-------------|
 | `arcgispro install` | Install the ProExporter add-in |
 | `arcgispro uninstall` | Show uninstall instructions |
+| `arcgispro launch` | Launch ArcGIS Pro (opens .aprx in current dir if found) |
 | `arcgispro status` | Show export status and validate files |
 | `arcgispro clean` | Remove generated files |
-| `arcgispro open` | Open folder or select project |
+| `arcgispro open` | Open export folder |
 
 ### Query
 
@@ -48,6 +49,14 @@ arcgispro install
 | `arcgispro context` | Full markdown dump |
 
 Add `--json` to any query command for machine-readable output.
+
+## Troubleshooting
+
+**`arcgispro` launches ArcGIS Pro instead of the CLI?**
+
+This happens if `C:\Program Files\ArcGIS\Pro\bin` is on your PATH. Options:
+- Use `agp` instead (alias): `agp layers`, `agp launch`
+- Or fix PATH order: ensure Python Scripts comes before ArcGIS Pro bin
 
 ## Requirements
 
