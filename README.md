@@ -1,5 +1,9 @@
 # ArcGIS Pro CLI
 
+[![PyPI](https://img.shields.io/pypi/v/arcgispro-cli)](https://pypi.org/project/arcgispro-cli/)
+[![CI](https://github.com/danmaps/arcgispro_cli/workflows/CI/badge.svg)](https://github.com/danmaps/arcgispro_cli/actions)
+[![Release](https://img.shields.io/github/v/release/danmaps/arcgispro_cli)](https://github.com/danmaps/arcgispro_cli/releases)
+
 Give AI agents eyes into ArcGIS Pro.
 
 ```bash
