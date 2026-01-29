@@ -91,15 +91,4 @@
       
     </insertModule>
   </modules>
-
-  <propertySheets>
-    <updateSheet refID="esri_core_optionsPropertySheet">
-      <insertPage id="ProExporter_SettingsPage" 
-                  caption="ArcGIS Pro CLI" 
-                  className="ProExporter.Settings.SettingsViewModel"
-                  group="Application">
-        <content className="ProExporter.Settings.SettingsView"/>
-      </insertPage>
-    </updateSheet>
-  </propertySheets>
 </ArcGIS>

@@ -23,6 +23,9 @@
     <None Include="Properties\launchSettings.json" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="YamlDotNet" Version="16.0.0" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="ArcGIS.Desktop.Framework">
       <HintPath>C:\Program Files\ArcGIS\Pro\bin\ArcGIS.Desktop.Framework.dll</HintPath>
       <CopyLocal>False</CopyLocal>

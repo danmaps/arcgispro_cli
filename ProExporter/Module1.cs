@@ -71,26 +71,34 @@ namespace ProExporter
         /// </summary>
         private async void OnProjectOpened(ProjectEventArgs args)
         {
+            var project = Project.Current;
+            if (project == null)
+                return;
+
+            var projectPath = project.URI;
+            if (string.IsNullOrEmpty(projectPath))
+                return;
+
+            var projectDir = System.IO.Path.GetDirectoryName(projectPath);
+            var arcgisproFolder = System.IO.Path.Combine(projectDir, ".arcgispro");
+            
+            // Load config
+            var config = ExportConfig.Load(arcgisproFolder);
+            
             // Check if auto-export is enabled
-            if (!Properties.Settings.Default.AutoExportEnabled)
+            if (!config.AutoExportEnabled)
                 return;
 
             // Run safety checks
-            if (!ShouldAutoExport())
+            if (!ShouldAutoExport(config))
                 return;
 
             // Run export in background
             try
             {
-                var options = ExportOptions.FromSettings();
+                var options = ExportOptions.FromConfig(config);
                 var controller = new ExportController();
-                var result = await controller.RunSnapshotAsync(options);
-
-                if (result.Success)
-                {
-                    Properties.Settings.Default.LastExportTime = DateTime.Now;
-                    Properties.Settings.Default.Save();
-                }
+                await controller.RunSnapshotAsync(options);
             }
             catch
             {
@@ -101,7 +109,7 @@ namespace ProExporter
         /// <summary>
         /// Check if auto-export should run based on safety conditions
         /// </summary>
-        private bool ShouldAutoExport()
+        private bool ShouldAutoExport(ExportConfig config)
         {
             var project = Project.Current;
             if (project == null)
@@ -112,7 +120,7 @@ namespace ProExporter
                 return false;
 
             // Check local only setting
-            if (Properties.Settings.Default.AutoExportLocalOnly)
+            if (config.AutoExportLocalOnly)
             {
                 // Skip network paths (UNC or mapped drives that are network)
                 if (projectPath.StartsWith("\\\\"))
@@ -121,11 +129,11 @@ namespace ProExporter
                 // Check if it's a local drive
                 try
                 {
-                    var root = Path.GetPathRoot(projectPath);
+                    var root = System.IO.Path.GetPathRoot(projectPath);
                     if (!string.IsNullOrEmpty(root))
                     {
-                        var driveInfo = new DriveInfo(root);
-                        if (driveInfo.DriveType == DriveType.Network)
+                        var driveInfo = new System.IO.DriveInfo(root);
+                        if (driveInfo.DriveType == System.IO.DriveType.Network)
                             return false;
                     }
                 }
@@ -136,7 +144,7 @@ namespace ProExporter
             }
 
             // Check layer count
-            var maxLayers = Properties.Settings.Default.AutoExportMaxLayers;
+            var maxLayers = config.AutoExportMaxLayers;
             if (maxLayers > 0)
             {
                 try

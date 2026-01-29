@@ -21,15 +21,15 @@ namespace ProExporter
         public bool ExportFields { get; set; } = true;
 
         /// <summary>
-        /// Create options from current settings
+        /// Create options from config
         /// </summary>
-        public static ExportOptions FromSettings()
+        public static ExportOptions FromConfig(ExportConfig config)
         {
             return new ExportOptions
             {
-                ExportImages = Properties.Settings.Default.ExportImages,
-                ExportNotebooks = Properties.Settings.Default.ExportNotebooks,
-                ExportFields = Properties.Settings.Default.ExportFields
+                ExportImages = config.ExportImages,
+                ExportNotebooks = config.ExportNotebooks,
+                ExportFields = config.ExportFields
             };
         }
 
