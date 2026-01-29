@@ -65,6 +65,7 @@ Use conventional commits with short, clear messages:
 - Use scope when helpful: `feat(addin):`, `fix(cli):`
 - Imperative mood: "add feature" not "added feature"
 - No period at end of subject
+- **Commit between tasks** - don't bundle unrelated changes
 
 **Examples:**
 ```
