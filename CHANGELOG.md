@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-01-29
+
+### Added
+- **CLI:** `launch` command to open ArcGIS Pro (auto-detects .aprx in current dir)
+- **Add-in:** Terminal button opens cmd at project folder with Pro Python env activated
+- **Add-in:** Generates `AGENTS.md` skill file for AI agent discovery
+- **Repo:** Added `.github/copilot-instructions.md` for Copilot context
+
+### Changed
+- Consolidated `CONTEXT_SKILL.md` and `AGENT_TOOL_SKILL.md` into single `AGENTS.md` at `.arcgispro/` root
+
 ## [0.2.1] - 2026-01-28
 
 ### Changed

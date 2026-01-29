@@ -15,15 +15,21 @@ This project provides AI agents visibility into ArcGIS Pro sessions through two 
 arcgispro_cli/
 ├── ProExporter/     # C# ArcGIS Pro add-in (exports data)
 │   ├── *.cs         # Button handlers, context collection, serialization
-│   ├── Config.daml  # Add-in UI configuration
+│   ├── Config.daml  # Add-in UI configuration (includes version)
 │   └── *.csproj     # MSBuild project (NOT dotnet CLI)
 ├── cli/             # Python CLI (queries data)
 │   ├── arcgispro_cli/
 │   │   ├── cli.py       # Main entry point
 │   │   └── commands/    # Click command modules
-│   └── pyproject.toml   # Hatchling build config
+│   └── pyproject.toml   # Hatchling build config (includes version)
 └── .github/         # CI/CD workflows
 ```
+
+## Versioning
+
+**CLI and add-in versions must match.** Update both when releasing:
+- `cli/pyproject.toml` → `version = "X.Y.Z"`
+- `ProExporter/Config.daml` → `<AddInInfo ... version="X.Y.Z" ...>`
 
 ## Build Instructions
 
