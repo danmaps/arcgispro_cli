@@ -314,23 +314,34 @@ Ask the user to click **Snapshot** in ArcGIS Pro when:
 project_root/
 ├── AGENTS.md           # This file (start here!)
 ├── TSPM_Overview.aprx  # Your ArcGIS Pro project
-├── .arcgispro/         # Export folder (CLI queries this)
-│   ├── meta.json           # Export timestamp, tool version
-│   ├── active_project.txt  # Path to the .aprx file
-│   ├── context/
-│   │   ├── project.json    # Project metadata
-│   │   ├── maps.json       # All maps with extents/scales
-│   │   ├── layers.json     # All layers with field schemas
-│   │   ├── tables.json     # Standalone tables
-│   │   ├── connections.json # Data connections
-│   │   ├── layouts.json    # Print layouts
-│   │   └── notebooks.json  # Jupyter notebooks
-│   ├── images/
-│   │   ├── map_*.png       # Screenshots of each map view
-│   │   └── layout_*.png    # Screenshots of each layout
-│   └── snapshot/
-│       └── context.md      # Human-readable summary
+└── .arcgispro/         # Export folder (CLI queries this)
+    ├── config.yml          # Export settings (auto-export, toggles)
+    ├── meta.json           # Export timestamp, tool version
+    ├── active_project.txt  # Path to the .aprx file
+    ├── context/
+    │   ├── project.json    # Project metadata
+    │   ├── maps.json       # All maps with extents/scales
+    │   ├── layers.json     # All layers with field schemas
+    │   ├── tables.json     # Standalone tables
+    │   ├── connections.json # Data connections
+    │   ├── layouts.json    # Print layouts
+    │   └── notebooks.json  # Jupyter notebooks
+    ├── images/
+    │   ├── map_*.png       # Screenshots of each map view
+    │   └── layout_*.png    # Screenshots of each layout
+    └── snapshot/
+        └── context.md      # Human-readable summary
 ```
+
+## Configuration
+
+Edit `.arcgispro/config.yml` to control exports:
+- `autoExportEnabled` — Auto-export on project open (default: false)
+- `autoExportLocalOnly` — Skip network drives (default: true)
+- `autoExportMaxLayers` — Safety limit (default: 50)
+- `exportImages` — Include map screenshots (default: true)
+- `exportNotebooks` — Include notebook metadata (default: true)
+- `exportFields` — Include layer field schemas (default: true)
 
 ## Key JSON Fields
 

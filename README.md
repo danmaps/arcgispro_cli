@@ -97,28 +97,47 @@ This tool is designed to make ArcGIS Pro sessions observable for AI coding assis
 
 ### What Gets Exported
 
-When you click **Snapshot** in ArcGIS Pro, the `.arcgispro/` folder contains:
+When you click **Snapshot** in ArcGIS Pro, the project structure is:
 
 ```
-.arcgispro/
+project_root/
 ├── AGENTS.md              # AI agent skill file (start here!)
-├── meta.json              # Export timestamp, tool version
-├── context/
-│   ├── project.json       # Project name, path, geodatabases
-│   ├── maps.json          # Map names, spatial references, scales
-│   ├── layers.json        # Full layer details with field schemas
-│   ├── tables.json        # Standalone tables
-│   ├── connections.json   # Database connections
-│   ├── layouts.json       # Print layouts
-│   └── notebooks.json     # Jupyter notebooks
-├── images/
-│   ├── map_*.png          # Screenshots of each map view
-│   └── layout_*.png       # Screenshots of each layout
-└── snapshot/
-    └── context.md         # Human-readable summary
+├── YourProject.aprx       # ArcGIS Pro project file
+└── .arcgispro/
+    ├── config.yml         # Export settings (auto-export, toggles)
+    ├── meta.json          # Export timestamp, tool version
+    ├── context/
+    │   ├── project.json       # Project name, path, geodatabases
+    │   ├── maps.json          # Map names, spatial references, scales
+    │   ├── layers.json        # Full layer details with field schemas
+    │   ├── tables.json        # Standalone tables
+    │   ├── connections.json   # Database connections
+    │   ├── layouts.json       # Print layouts
+    │   └── notebooks.json     # Jupyter notebooks
+    ├── images/
+    │   ├── map_*.png          # Screenshots of each map view
+    │   └── layout_*.png       # Screenshots of each layout
+    └── snapshot/
+        └── context.md         # Human-readable summary
 ```
 
 The `AGENTS.md` file teaches AI agents how to use the CLI and interpret the exported data — no user explanation needed.
+
+### Configuration
+
+Edit `.arcgispro/config.yml` to control export behavior:
+
+```yaml
+# Auto-export on project open (default: false)
+autoExportEnabled: false
+autoExportLocalOnly: true   # Skip network drives
+autoExportMaxLayers: 50     # Safety limit
+
+# Content toggles
+exportImages: true          # Map/layout screenshots
+exportNotebooks: true       # Jupyter notebook metadata
+exportFields: true          # Layer field schemas
+```
 
 ### Claude Code / Copilot CLI / Gemini CLI
 
