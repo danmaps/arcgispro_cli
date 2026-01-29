@@ -16,7 +16,7 @@
   </AddInInfo>
 
   <modules>
-    <insertModule id="ProExporter_Module" className="Module1" autoLoad="false" caption="Module1">
+    <insertModule id="ProExporter_Module" className="Module1" autoLoad="true" caption="Module1">
       <tabs>
         <tab id="ProExporter_Tab1" caption="CLI">
           <group refID="ProExporter_Group1"/>
@@ -91,4 +91,15 @@
       
     </insertModule>
   </modules>
+
+  <propertySheets>
+    <updateSheet refID="esri_core_optionsPropertySheet">
+      <insertPage id="ProExporter_SettingsPage" 
+                  caption="ArcGIS Pro CLI" 
+                  className="ProExporter.Settings.SettingsViewModel"
+                  group="Application">
+        <content className="ProExporter.Settings.SettingsView"/>
+      </insertPage>
+    </updateSheet>
+  </propertySheets>
 </ArcGIS>

@@ -40,17 +40,19 @@ namespace ProExporter
         /// <summary>
         /// Run a full snapshot export (context + images)
         /// </summary>
-        public async Task<ExportResult> RunSnapshotAsync()
+        public async Task<ExportResult> RunSnapshotAsync(ExportOptions options = null)
         {
-            return await RunExportAsync(exportContext: true, exportImages: true);
+            options ??= ExportOptions.Default;
+            return await RunExportAsync(exportContext: true, exportImages: options.ExportImages, options: options);
         }
 
         /// <summary>
         /// Run context-only export (JSON + Markdown, no images)
         /// </summary>
-        public async Task<ExportResult> RunContextExportAsync()
+        public async Task<ExportResult> RunContextExportAsync(ExportOptions options = null)
         {
-            return await RunExportAsync(exportContext: true, exportImages: false);
+            options ??= ExportOptions.Default;
+            return await RunExportAsync(exportContext: true, exportImages: false, options: options);
         }
 
         /// <summary>
@@ -58,13 +60,13 @@ namespace ProExporter
         /// </summary>
         public async Task<ExportResult> RunImageExportAsync()
         {
-            return await RunExportAsync(exportContext: false, exportImages: true);
+            return await RunExportAsync(exportContext: false, exportImages: true, options: ExportOptions.Default);
         }
 
         /// <summary>
         /// Core export method with options
         /// </summary>
-        private async Task<ExportResult> RunExportAsync(bool exportContext, bool exportImages)
+        private async Task<ExportResult> RunExportAsync(bool exportContext, bool exportImages, ExportOptions options)
         {
             var result = new ExportResult();
             var stopwatch = Stopwatch.StartNew();
@@ -103,7 +105,7 @@ namespace ProExporter
                 {
                     try
                     {
-                        var context = await ContextCollector.CollectAsync(ct);
+                        var context = await ContextCollector.CollectAsync(options, ct);
                         var contextFiles = await Serializer.WriteContextAsync(context, outputFolder);
                         result.FilesCreated.AddRange(contextFiles);
                     }

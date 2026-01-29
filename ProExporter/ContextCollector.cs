@@ -24,9 +24,10 @@ namespace ProExporter
         /// <summary>
         /// Collect all context from the current Pro session
         /// </summary>
-        public static async Task<ExportContext> CollectAsync(CancellationToken cancellationToken = default)
+        public static async Task<ExportContext> CollectAsync(ExportOptions options, CancellationToken cancellationToken = default)
         {
             ExportContext context = null;
+            options ??= ExportOptions.Default;
             
             await QueuedTask.Run(() =>
             {
@@ -55,11 +56,11 @@ namespace ProExporter
                     context.Maps.Add(mapInfo);
 
                     // Collect layers
-                    var layers = CollectLayerInfo(map);
+                    var layers = CollectLayerInfo(map, options.ExportFields);
                     context.Layers.AddRange(layers);
 
                     // Collect standalone tables
-                    var tables = CollectTableInfo(map);
+                    var tables = CollectTableInfo(map, options.ExportFields);
                     context.Tables.AddRange(tables);
                 }
 
@@ -79,8 +80,11 @@ namespace ProExporter
                 // Collect database connections
                 context.Connections = CollectConnections();
 
-                // Collect notebooks
-                context.Notebooks = CollectNotebooks();
+                // Collect notebooks (if enabled)
+                if (options.ExportNotebooks)
+                {
+                    context.Notebooks = CollectNotebooks();
+                }
             });
             
             return context ?? new ExportContext { Meta = new MetaInfo() };
@@ -163,7 +167,7 @@ namespace ProExporter
         /// <summary>
         /// Collect layer information from a map
         /// </summary>
-        private static List<LayerInfo> CollectLayerInfo(Map map)
+        private static List<LayerInfo> CollectLayerInfo(Map map, bool exportFields)
         {
             var layers = new List<LayerInfo>();
             
@@ -188,7 +192,7 @@ namespace ProExporter
                 // Feature layer specific properties
                 if (layer is FeatureLayer featureLayer)
                 {
-                    CollectFeatureLayerInfo(featureLayer, info);
+                    CollectFeatureLayerInfo(featureLayer, info, exportFields);
                 }
                 // Raster layer
                 else if (layer is RasterLayer rasterLayer)
@@ -210,7 +214,7 @@ namespace ProExporter
         /// <summary>
         /// Collect feature layer specific information
         /// </summary>
-        private static void CollectFeatureLayerInfo(FeatureLayer featureLayer, LayerInfo info)
+        private static void CollectFeatureLayerInfo(FeatureLayer featureLayer, LayerInfo info, bool exportFields)
         {
             info.IsEditable = featureLayer.IsEditable;
             info.DefinitionQuery = featureLayer.DefinitionQuery;
@@ -240,9 +244,12 @@ namespace ProExporter
                             // Count may fail for some data sources
                         }
 
-                        // Fields
-                        var fcDef = fc.GetDefinition();
-                        info.Fields = CollectFieldInfo(fcDef);
+                        // Fields (if enabled)
+                        if (exportFields)
+                        {
+                            var fcDef = fc.GetDefinition();
+                            info.Fields = CollectFieldInfo(fcDef);
+                        }
                     }
                 }
             }
@@ -332,7 +339,7 @@ namespace ProExporter
         /// <summary>
         /// Collect standalone table information from a map
         /// </summary>
-        private static List<TableInfo> CollectTableInfo(Map map)
+        private static List<TableInfo> CollectTableInfo(Map map, bool exportFields)
         {
             var tables = new List<TableInfo>();
             
@@ -362,8 +369,11 @@ namespace ProExporter
                             }
                             catch { }
 
-                            var tblDef = tbl.GetDefinition();
-                            info.Fields = CollectTableFieldInfo(tblDef);
+                            if (exportFields)
+                            {
+                                var tblDef = tbl.GetDefinition();
+                                info.Fields = CollectTableFieldInfo(tblDef);
+                            }
                         }
                     }
                 }
