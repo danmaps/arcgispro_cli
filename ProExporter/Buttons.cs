@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Desktop.Core;
@@ -191,25 +192,31 @@ namespace ProExporter
             var projectDir = Path.GetDirectoryName(project.URI);
             if (string.IsNullOrEmpty(projectDir)) return;
 
+            // Export session info for scripts to use
+            ExportSessionInfo(projectDir);
+
             var proPath = Environment.GetEnvironmentVariable("ProgramFiles") ?? @"C:\Program Files";
             var scriptsPath = Path.Combine(proPath, "ArcGIS", "Pro", "bin", "Python", "Scripts");
             var activateBat = Path.Combine(scriptsPath, "activate.bat");
             var pythonEnvUtils = Path.Combine(proPath, "ArcGIS", "Pro", "bin", "PythonEnvUtils.exe");
 
+            // Get current ArcGIS Pro process ID for arcpy to connect to
+            var proProcessId = Process.GetCurrentProcess().Id;
+
             string args;
             if (File.Exists(activateBat) && File.Exists(pythonEnvUtils))
             {
-                // Replicate proenv.bat logic but cd to project folder instead of env folder
-                // 1. Get active env from PythonEnvUtils.exe
-                // 2. Set CONDA_SKIPCHECK=1 so activate.bat uses fast path
-                // 3. Call activate.bat with the env path
-                // 4. cd to project folder
-                args = $"/k \"set CONDA_SKIPCHECK=1 && for /f \"delims=\" %i in ('\"{pythonEnvUtils}\"') do @call \"{activateBat}\" \"%i\" && cd /d \"{projectDir}\"\"";
+                // Set ARCGISPRO_PID so arcpy connects to this running Pro session
+                // This prevents "Directory does not exist" errors with stale temp paths
+                args = $"/k \"set ARCGISPRO_PID={proProcessId} && " +
+                       $"set CONDA_SKIPCHECK=1 && " +
+                       $"for /f \"delims=\" %i in ('\"{pythonEnvUtils}\"') do @call \"{activateBat}\" \"%i\" && " +
+                       $"cd /d \"{projectDir}\"\"";
             }
             else
             {
-                // Fallback: just open terminal at project folder
-                args = $"/k cd /d \"{projectDir}\"";
+                // Fallback: set PID and open at project folder
+                args = $"/k \"set ARCGISPRO_PID={proProcessId} && cd /d \"{projectDir}\"\"";
             }
 
             try
@@ -226,6 +233,39 @@ namespace ProExporter
             {
                 MessageBox.Show($"Failed to open terminal: {ex.Message}", "ArcGIS Pro CLI",
                     MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Export current Pro session info (PID, temp paths) for CLI scripts to use.
+        /// This helps Python scripts connect to the running Pro session and avoid stale workspace errors.
+        /// </summary>
+        private void ExportSessionInfo(string projectDir)
+        {
+            try
+            {
+                var arcgisproFolder = Path.Combine(projectDir, ".arcgispro");
+                Directory.CreateDirectory(arcgisproFolder);
+
+                var processId = Process.GetCurrentProcess().Id;
+                var sessionInfo = new
+                {
+                    processId = processId,
+                    timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                    tempPath = Path.GetTempPath(),
+                    proTempPath = Path.Combine(Path.GetTempPath(), $"ArcGISProTemp{processId}")
+                };
+
+                var json = JsonSerializer.Serialize(sessionInfo, new JsonSerializerOptions 
+                { 
+                    WriteIndented = true 
+                });
+                
+                File.WriteAllText(Path.Combine(arcgisproFolder, "session.json"), json);
+            }
+            catch
+            {
+                // Non-critical - continue even if session export fails
             }
         }
     }

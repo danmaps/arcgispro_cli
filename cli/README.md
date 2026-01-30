@@ -34,6 +34,34 @@ arcgispro clean --all
 arcgispro open
 ```
 
+## Using arcpy with Terminal Sessions
+
+The ArcGIS Pro CLI add-in includes a **Terminal** button that opens cmd.exe with the Pro Python environment activated. To avoid "Directory does not exist" errors with stale temp workspace paths, use the session helper:
+
+```python
+import arcgispro_cli.session as session
+
+# Ensure connection to running Pro session
+if session.ensure_arcpy_connection():
+    import arcpy
+    # arcpy will now use the current Pro session's workspace
+    print("Connected to Pro session:", session.get_session_info())
+else:
+    print("No active Pro session found")
+```
+
+### Session Helper API
+
+- `ensure_arcpy_connection()` - Sets ARCGISPRO_PID env var, returns True if successful
+- `get_session_info()` - Returns dict with processId, timestamp, tempPath, proTempPath
+- `get_pro_temp_path()` - Returns Path to current Pro temp directory
+- `is_pro_running()` - Returns True if session.json exists and is recent (<24hrs)
+
+This prevents errors like:
+```
+ERROR Directory does not exist or cannot be accessed: C:\Users\...\Temp\ArcGISProTemp27980
+```
+
 ## Workflow
 
 1. **In ArcGIS Pro:** Click "Snapshot" button in the **CLI** ribbon tab
@@ -47,6 +75,7 @@ The CLI reads from `.arcgispro/` folder created by the add-in:
 ```
 .arcgispro/
 ├── meta.json           # Export metadata
+├── session.json        # Current Pro session info (PID, temp paths)
 ├── active_project.txt  # Path to active .aprx
 ├── context/
 │   ├── project.json
