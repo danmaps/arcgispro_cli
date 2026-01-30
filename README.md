@@ -12,7 +12,7 @@ arcgispro install
 
 ## How It Works
 
-**Add-in exports. CLI queries.**
+ProExporter (Pro add-in) creates detailed flat files that explain the state of your ArcGIS Pro project. `arcgispro` CLI tool facilitates frictionless reasoning over the context. Fewer assumptions and annoying follow-up questions. Helps the AI help you.
 
 1. Open a project in ArcGIS Pro
 2. Click **Snapshot** in the **CLI** ribbon tab
@@ -121,7 +121,7 @@ project_root/
         └── context.md         # Human-readable summary
 ```
 
-The `AGENTS.md` file teaches AI agents how to use the CLI and interpret the exported data — no user explanation needed.
+The `AGENTS.md` file teaches AI agents how to use the CLI and interpret the exported data; no user explanation needed.
 
 ### Configuration
 
@@ -183,6 +183,10 @@ Look at the map screenshot and describe what you see
    ```
 
 4. **Check images for visual context** - map screenshots help AI understand spatial data
+
+5. **Be bold. Try pasting in a question you'd normally answer by working in ArcGIS Pro manually.**
+   - "Jeff wants an updated map of the project area with an imagery basemap instead of streets"
+     - AI generates a (working) python script that exports the PDF directly, using your existing map and layout. You get to go to lunch early, and get a raise.
 
 ### Custom Agent Integration
 
