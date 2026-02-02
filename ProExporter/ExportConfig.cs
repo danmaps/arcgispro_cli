@@ -64,6 +64,13 @@ namespace ProExporter
 # Auto-export on project open (default: false)
 " + yaml;
             
+            // Ensure directory exists before writing
+            var directory = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+            
             File.WriteAllText(path, commented);
         }
     }

@@ -49,6 +49,12 @@ namespace ProExporter
         public static async Task<List<string>> ExportMapViewsAsync(string outputFolder, CancellationToken cancellationToken = default)
         {
             var exportedFiles = new List<string>();
+            
+            // Ensure output directory exists
+            if (!Directory.Exists(outputFolder))
+            {
+                Directory.CreateDirectory(outputFolder);
+            }
 
             await QueuedTask.Run(() =>
             {
@@ -97,6 +103,12 @@ namespace ProExporter
             var project = Project.Current;
             if (project == null)
                 return exportedFiles;
+
+            // Ensure output directory exists
+            if (!Directory.Exists(outputFolder))
+            {
+                Directory.CreateDirectory(outputFolder);
+            }
 
             var layoutItems = project.GetItems<LayoutProjectItem>();
 
