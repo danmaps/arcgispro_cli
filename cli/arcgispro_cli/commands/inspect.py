@@ -112,6 +112,26 @@ def inspect_cmd(path):
             console.print(f"   [dim]...and {len(layers) - 15} more layers[/dim]")
         console.print()
     
+    # Geoprocessing
+    gp = context.get("geoprocessing") or {}
+    if gp:
+        console.print("[bold]🧰 Geoprocessing[/bold]")
+        try:
+            count = gp.get("count")
+            history = gp.get("history") or []
+            console.print(f"   Runs: {count if count is not None else len(history)}")
+            # Show up to 10 newest entries (if present)
+            if history:
+                for h in history[:10]:
+                    tool = h.get("displayName") or h.get("toolName") or "(unknown)"
+                    started = h.get("startedAt") or "-"
+                    ok = h.get("succeeded")
+                    ok_txt = "✓" if ok is True else ("✗" if ok is False else "-")
+                    console.print(f"   • {tool} | {started} | {ok_txt}")
+        except Exception:
+            console.print("   [dim](failed to parse geoprocessing.json)[/dim]")
+        console.print()
+
     # Images
     if images:
         console.print("[bold]🖼️  Images[/bold]")
