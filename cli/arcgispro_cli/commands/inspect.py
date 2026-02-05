@@ -1,20 +1,34 @@
 """inspect command - Print human-readable summary of exports."""
 
+import os
+from datetime import datetime
+from typing import Any, Dict, List
+
 import click
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 from rich import box
-from datetime import datetime
 
 from ..paths import find_arcgispro_folder, load_context_files, list_image_files
 
 console = Console()
 
+SERVICE_LAYER_KEYWORDS = (
+    "service",
+    "feature service",
+    "map service",
+    "image service",
+    "tile service",
+    "scene service",
+)
+MAX_HINTS = 3
+
 
 @click.command("inspect")
 @click.option("--path", "-p", type=click.Path(exists=True), help="Path to search for .arcgispro folder")
-def inspect_cmd(path):
+@click.option("--no-suggestions", is_flag=True, help="Hide the paid agent hint block")
+def inspect_cmd(path, no_suggestions):
     """Print a human-readable summary of the exported context.
     
     Shows project info, maps, layers, and export metadata in a
@@ -124,3 +138,79 @@ def inspect_cmd(path):
     console.print(f"   Context files: {sum(1 for v in context.values() if v is not None)}/7")
     console.print(f"   Images: {len(images)}")
     console.print()
+
+    if _should_show_suggestions(no_suggestions):
+        suggestions = _collect_next_steps(context)
+        if suggestions:
+            console.print()
+            console.print(Panel.fit(
+                "\n".join(suggestions),
+                title="Next steps",
+                border_style="magenta",
+                subtitle="Use --no-suggestions or ARCGISPRO_CLI_NO_SUGGESTIONS=1 to hide these hints"
+            ))
+
+
+def _should_show_suggestions(no_suggestions: bool) -> bool:
+    if no_suggestions:
+        return False
+    return not _env_flag_true("ARCGISPRO_CLI_NO_SUGGESTIONS")
+
+
+def _env_flag_true(key: str) -> bool:
+    value = os.getenv(key)
+    if not value:
+        return False
+    return value.strip().lower() not in {"0", "false", "no", ""}
+
+
+def _collect_next_steps(context: Dict[str, Any]) -> List[str]:
+    hints = []
+
+    if _has_broken_sources(context):
+        hints.append("Tip: run the 'preflight' advisor on this snapshot to catch brittle data sources before scripting.")
+    if _has_mixed_spatial_references(context):
+        hints.append("Tip: let the 'approach' advisor verify mixed spatial references across maps before automation.")
+    if _has_service_layers(context):
+        hints.append("Tip: service layers detected—preflight can surface endpoint resilience and credential hints.")
+    if _has_complex_relations(context):
+        hints.append("Tip: the approach advisor excels at joins and relates; run it to ensure relationships stay reliable.")
+
+    return hints[:MAX_HINTS]
+
+
+def _has_broken_sources(context: Dict[str, Any]) -> bool:
+    layers = context.get("layers") or []
+    tables = context.get("tables") or []
+    return any(layer.get("isBroken") for layer in layers) or any(table.get("isBroken") for table in tables)
+
+
+def _has_mixed_spatial_references(context: Dict[str, Any]) -> bool:
+    wkids = {
+        map_info.get("spatialReferenceWkid")
+        for map_info in context.get("maps") or []
+        if map_info.get("spatialReferenceWkid") is not None
+    }
+    return len(wkids) > 1
+
+
+def _has_service_layers(context: Dict[str, Any]) -> bool:
+    for layer in context.get("layers") or []:
+        text = " ".join([
+            layer.get("layerType", ""),
+            layer.get("dataSourceType", ""),
+            layer.get("dataSourcePath", "")
+        ]).lower()
+        if any(keyword in text for keyword in SERVICE_LAYER_KEYWORDS):
+            return True
+    return False
+
+
+def _has_complex_relations(context: Dict[str, Any]) -> bool:
+    total_relations = 0
+    for layer in context.get("layers") or []:
+        total_relations += len(layer.get("joinedTables") or [])
+        total_relations += len(layer.get("relatedTables") or [])
+        if total_relations >= 3:
+            return True
+    return False
