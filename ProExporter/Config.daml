@@ -38,8 +38,8 @@
                 caption="Snapshot" 
                 className="SnapshotButton" 
                 loadOnClick="true" 
-                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/Camera16.png" 
-                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/Camera32.png">
+                smallImage="Images/AddInDesktop16.png" 
+                largeImage="Images/AddInDesktop32.png">
           <tooltip heading="Export Snapshot">
             Export full context (JSON, Markdown, images) to .arcgispro/ folder
             <disabledText>Open a project first</disabledText>
@@ -49,8 +49,8 @@
                 caption="Dump Context" 
                 className="DumpContextButton" 
                 loadOnClick="true" 
-                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GeodatabaseXMLRecordSetExport16.png" 
-                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GeodatabaseXMLRecordSetExport32.png">
+                smallImage="Images/AddInDesktop16.png" 
+                largeImage="Images/AddInDesktop32.png">
           <tooltip heading="Dump Context">
             Export project/map/layer metadata as JSON files
             <disabledText>Open a project first</disabledText>
@@ -60,8 +60,8 @@
                 caption="Export Images" 
                 className="ExportImagesButton" 
                 loadOnClick="true" 
-                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/TakeScreenshot16.png" 
-                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/TakeScreenshot32.png">
+                smallImage="Images/AddInDesktop16.png" 
+                largeImage="Images/AddInDesktop32.png">
           <tooltip heading="Export Images">
             Export map views and layouts as PNG images
             <disabledText>Open a project first</disabledText>
@@ -71,8 +71,8 @@
                 caption="Open Folder" 
                 className="OpenFolderButton" 
                 loadOnClick="true" 
-                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/FolderOpenState16.png" 
-                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/FolderOpenState32.png">
+                smallImage="Images/AddInDesktop16.png" 
+                largeImage="Images/AddInDesktop32.png">
           <tooltip heading="Open Output Folder">
             Open the .arcgispro/ output folder in Explorer
           </tooltip>
@@ -81,8 +81,8 @@
                 caption="Terminal" 
                 className="OpenTerminalButton" 
                 loadOnClick="true" 
-                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/Console16.png" 
-                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/Console32.png">
+                smallImage="Images/AddInDesktop16.png" 
+                largeImage="Images/AddInDesktop32.png">
           <tooltip heading="Open Terminal">
             Open terminal at project folder with ArcGIS Pro Python environment activated
           </tooltip>
