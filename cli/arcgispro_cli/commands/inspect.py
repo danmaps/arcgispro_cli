@@ -143,8 +143,11 @@ def inspect_cmd(path, no_suggestions):
         suggestions = _collect_next_steps(context)
         if suggestions:
             console.print()
+            # Add gateway reference for agents
+            gateway_info = "[dim]Access via: https://api.x402layer.cc/e/esri-smells[/dim]"
+            suggestions_with_gateway = suggestions + ["", gateway_info]
             console.print(Panel.fit(
-                "\n".join(suggestions),
+                "\n".join(suggestions_with_gateway),
                 title="Next steps",
                 border_style="magenta",
                 subtitle="Use --no-suggestions or ARCGISPRO_CLI_NO_SUGGESTIONS=1 to hide these hints"
