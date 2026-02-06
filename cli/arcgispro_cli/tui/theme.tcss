@@ -1,0 +1,70 @@
+Screen {
+  background: #000000;
+  color: #F5F5F5;
+}
+
+#main {
+  height: 1fr;
+}
+
+#tree-panel, #detail, #logs {
+  border: round #53565A;
+  padding: 1 1;
+}
+
+#tree-panel {
+  width: 36%;
+}
+
+#right {
+  width: 64%;
+}
+
+#detail {
+  height: 70%;
+  overflow-y: auto;
+}
+
+#logs {
+  height: 30%;
+}
+
+/* Tree styling */
+Tree {
+  background: #000000;
+}
+
+Tree > .tree--cursor {
+  background: #333333;
+  color: #F5F5F5;
+}
+
+Tree > .tree--highlight {
+  background: #333333;
+  color: #F5F5F5;
+}
+
+Tree:focus > .tree--cursor {
+  background: #444444;
+  color: #FFFFFF;
+}
+
+*:focus {
+  tint: transparent;
+}
+
+/* Footer styling - dark background for readability */
+Footer {
+  background: #1A1A1A;
+  color: #F5F5F5;
+}
+
+Footer .footer--highlight {
+  background: #333333;
+  color: #FFFFFF;
+}
+
+Footer .footer--key {
+  background: #333333;
+  color: #FFFFFF;
+}

@@ -21,6 +21,11 @@ namespace ProExporter
         public bool ExportFields { get; set; } = true;
 
         /// <summary>
+        /// Number of sample rows to export per layer/table (0 = none)
+        /// </summary>
+        public int SampleRowCount { get; set; } = 10;
+
+        /// <summary>
         /// Create options from config
         /// </summary>
         public static ExportOptions FromConfig(ExportConfig config)
@@ -29,7 +34,8 @@ namespace ProExporter
             {
                 ExportImages = config.ExportImages,
                 ExportNotebooks = config.ExportNotebooks,
-                ExportFields = config.ExportFields
+                ExportFields = config.ExportFields,
+                SampleRowCount = config.SampleRowCount
             };
         }
 

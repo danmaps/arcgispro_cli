@@ -79,6 +79,7 @@ namespace ProExporter
         public List<string> JoinedTables { get; set; } = new List<string>();
         public List<string> RelatedTables { get; set; } = new List<string>();
         public string ParentGroupLayer { get; set; }
+        public List<SampleRow> SampleData { get; set; } = new List<SampleRow>();
     }
 
     /// <summary>
@@ -108,6 +109,23 @@ namespace ProExporter
         public string DefinitionQuery { get; set; }
         public long? RowCount { get; set; }
         public List<FieldInfo> Fields { get; set; } = new List<FieldInfo>();
+        public List<SampleRow> SampleData { get; set; } = new List<SampleRow>();
+    }
+
+    /// <summary>
+    /// Sample data row with attributes and optional GeoJSON geometry
+    /// </summary>
+    public class SampleRow
+    {
+        /// <summary>
+        /// Dictionary of field name to value (all types serialized as appropriate JSON types)
+        /// </summary>
+        public Dictionary<string, object> Attributes { get; set; } = new Dictionary<string, object>();
+        
+        /// <summary>
+        /// GeoJSON geometry (null for tables or non-geometry layers)
+        /// </summary>
+        public object Geometry { get; set; }
     }
 
     /// <summary>

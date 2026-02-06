@@ -16,6 +16,7 @@ namespace ProExporter
         public bool ExportImages { get; set; } = true;
         public bool ExportNotebooks { get; set; } = true;
         public bool ExportFields { get; set; } = true;
+        public int SampleRowCount { get; set; } = 10;
 
         /// <summary>
         /// Load config from .arcgispro/config.yml or return defaults

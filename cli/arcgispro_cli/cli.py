@@ -27,7 +27,7 @@ import click
 from rich.console import Console
 
 from . import __version__
-from .commands import clean, open_project, install, query, launch, notebooks
+from .commands import clean, open_project, install, query, launch, notebooks, tui
 
 console = Console()
 
@@ -73,6 +73,7 @@ main.add_command(query.tables_cmd, name="tables")
 main.add_command(query.connections_cmd, name="connections")
 main.add_command(notebooks.notebooks_cmd, name="notebooks")
 main.add_command(query.context_cmd, name="context")
+main.add_command(tui.tui)
 
 
 if __name__ == "__main__":

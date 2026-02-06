@@ -56,11 +56,11 @@ namespace ProExporter
                     context.Maps.Add(mapInfo);
 
                     // Collect layers
-                    var layers = CollectLayerInfo(map, options.ExportFields);
+                    var layers = CollectLayerInfo(map, options.ExportFields, options.SampleRowCount);
                     context.Layers.AddRange(layers);
 
                     // Collect standalone tables
-                    var tables = CollectTableInfo(map, options.ExportFields);
+                    var tables = CollectTableInfo(map, options.ExportFields, options.SampleRowCount);
                     context.Tables.AddRange(tables);
                 }
 
@@ -167,7 +167,7 @@ namespace ProExporter
         /// <summary>
         /// Collect layer information from a map
         /// </summary>
-        private static List<LayerInfo> CollectLayerInfo(Map map, bool exportFields)
+        private static List<LayerInfo> CollectLayerInfo(Map map, bool exportFields, int sampleRowCount)
         {
             var layers = new List<LayerInfo>();
             
@@ -192,7 +192,7 @@ namespace ProExporter
                 // Feature layer specific properties
                 if (layer is FeatureLayer featureLayer)
                 {
-                    CollectFeatureLayerInfo(featureLayer, info, exportFields);
+                    CollectFeatureLayerInfo(featureLayer, info, exportFields, sampleRowCount);
                 }
                 // Raster layer
                 else if (layer is RasterLayer rasterLayer)
@@ -214,7 +214,7 @@ namespace ProExporter
         /// <summary>
         /// Collect feature layer specific information
         /// </summary>
-        private static void CollectFeatureLayerInfo(FeatureLayer featureLayer, LayerInfo info, bool exportFields)
+        private static void CollectFeatureLayerInfo(FeatureLayer featureLayer, LayerInfo info, bool exportFields, int sampleRowCount)
         {
             info.IsEditable = featureLayer.IsEditable;
             info.DefinitionQuery = featureLayer.DefinitionQuery;
@@ -249,6 +249,19 @@ namespace ProExporter
                         {
                             var fcDef = fc.GetDefinition();
                             info.Fields = CollectFieldInfo(fcDef);
+                        }
+
+                        // Sample data (if enabled)
+                        if (sampleRowCount > 0)
+                        {
+                            try
+                            {
+                                info.SampleData = CollectSampleDataFromFeatureClass(fc, sampleRowCount);
+                            }
+                            catch
+                            {
+                                // Sample data collection may fail
+                            }
                         }
                     }
                 }
@@ -339,7 +352,7 @@ namespace ProExporter
         /// <summary>
         /// Collect standalone table information from a map
         /// </summary>
-        private static List<TableInfo> CollectTableInfo(Map map, bool exportFields)
+        private static List<TableInfo> CollectTableInfo(Map map, bool exportFields, int sampleRowCount)
         {
             var tables = new List<TableInfo>();
             
@@ -373,6 +386,19 @@ namespace ProExporter
                             {
                                 var tblDef = tbl.GetDefinition();
                                 info.Fields = CollectTableFieldInfo(tblDef);
+                            }
+
+                            // Sample data (if enabled)
+                            if (sampleRowCount > 0)
+                            {
+                                try
+                                {
+                                    info.SampleData = CollectSampleDataFromTable(tbl, sampleRowCount);
+                                }
+                                catch
+                                {
+                                    // Sample data collection may fail
+                                }
                             }
                         }
                     }
@@ -692,6 +718,285 @@ namespace ProExporter
                 return string.Join("", lines);
             }
             return null;
+        }
+
+        /// <summary>
+        /// Collect sample data rows from a feature class (with geometry as GeoJSON)
+        /// </summary>
+        private static List<SampleRow> CollectSampleDataFromFeatureClass(FeatureClass fc, int maxRows)
+        {
+            var samples = new List<SampleRow>();
+            if (maxRows <= 0) return samples;
+
+            try
+            {
+                var fcDef = fc.GetDefinition();
+                var fields = fcDef.GetFields();
+                
+                using (var cursor = fc.Search())
+                {
+                    int count = 0;
+                    while (cursor.MoveNext() && count < maxRows)
+                    {
+                        using (var row = cursor.Current as Feature)
+                        {
+                            if (row == null) continue;
+
+                            var sampleRow = new SampleRow();
+                            
+                            // Collect attributes
+                            for (int i = 0; i < fields.Count; i++)
+                            {
+                                var field = fields[i];
+                                if (field.Name.Equals("Shape", StringComparison.OrdinalIgnoreCase))
+                                    continue; // Skip geometry field in attributes
+                                
+                                try
+                                {
+                                    var value = row[i];
+                                    sampleRow.Attributes[field.Name] = FormatAttributeValue(value);
+                                }
+                                catch
+                                {
+                                    sampleRow.Attributes[field.Name] = null;
+                                }
+                            }
+
+                            // Convert geometry to GeoJSON
+                            try
+                            {
+                                var geom = row.GetShape();
+                                if (geom != null && !geom.IsEmpty)
+                                {
+                                    sampleRow.Geometry = GeometryToGeoJson(geom);
+                                }
+                            }
+                            catch
+                            {
+                                // Geometry conversion may fail
+                            }
+
+                            samples.Add(sampleRow);
+                            count++;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Sample collection may fail
+            }
+
+            return samples;
+        }
+
+        /// <summary>
+        /// Collect sample data rows from a standalone table (no geometry)
+        /// </summary>
+        private static List<SampleRow> CollectSampleDataFromTable(Table table, int maxRows)
+        {
+            var samples = new List<SampleRow>();
+            if (maxRows <= 0) return samples;
+
+            try
+            {
+                var tableDef = table.GetDefinition();
+                var fields = tableDef.GetFields();
+                
+                using (var cursor = table.Search())
+                {
+                    int count = 0;
+                    while (cursor.MoveNext() && count < maxRows)
+                    {
+                        using (var row = cursor.Current)
+                        {
+                            if (row == null) continue;
+
+                            var sampleRow = new SampleRow();
+                            
+                            // Collect attributes
+                            for (int i = 0; i < fields.Count; i++)
+                            {
+                                var field = fields[i];
+                                try
+                                {
+                                    var value = row[i];
+                                    sampleRow.Attributes[field.Name] = FormatAttributeValue(value);
+                                }
+                                catch
+                                {
+                                    sampleRow.Attributes[field.Name] = null;
+                                }
+                            }
+
+                            samples.Add(sampleRow);
+                            count++;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Sample collection may fail
+            }
+
+            return samples;
+        }
+
+        /// <summary>
+        /// Format attribute value for JSON serialization
+        /// </summary>
+        private static object FormatAttributeValue(object value)
+        {
+            if (value == null || value is DBNull)
+                return null;
+            
+            if (value is DateTime dt)
+                return dt.ToString("o"); // ISO 8601 format
+            
+            if (value is DateTimeOffset dto)
+                return dto.ToString("o");
+            
+            if (value is Guid guid)
+                return guid.ToString();
+            
+            if (value is byte[] bytes)
+                return Convert.ToBase64String(bytes);
+            
+            // Numbers, strings, bools serialize directly
+            return value;
+        }
+
+        /// <summary>
+        /// Convert ArcGIS geometry to GeoJSON object
+        /// </summary>
+        private static object GeometryToGeoJson(Geometry geom)
+        {
+            if (geom == null || geom.IsEmpty)
+                return null;
+
+            var geoJson = new Dictionary<string, object>();
+            
+            // Point
+            if (geom is MapPoint point)
+            {
+                geoJson["type"] = "Point";
+                geoJson["coordinates"] = new[] { point.X, point.Y };
+                if (point.HasZ && !double.IsNaN(point.Z))
+                {
+                    geoJson["coordinates"] = new[] { point.X, point.Y, point.Z };
+                }
+            }
+            // Multipoint
+            else if (geom is Multipoint multipoint)
+            {
+                geoJson["type"] = "MultiPoint";
+                var coords = new List<double[]>();
+                foreach (var pt in multipoint.Points)
+                {
+                    coords.Add(new[] { pt.X, pt.Y });
+                }
+                geoJson["coordinates"] = coords;
+            }
+            // Polyline
+            else if (geom is Polyline polyline)
+            {
+                if (polyline.PartCount == 1)
+                {
+                    geoJson["type"] = "LineString";
+                    var coords = new List<double[]>();
+                    foreach (var pt in polyline.Points)
+                    {
+                        coords.Add(new[] { pt.X, pt.Y });
+                    }
+                    geoJson["coordinates"] = coords;
+                }
+                else
+                {
+                    geoJson["type"] = "MultiLineString";
+                    var parts = new List<List<double[]>>();
+                    foreach (var part in polyline.Parts)
+                    {
+                        var coords = new List<double[]>();
+                        var points = part.AsEnumerable().Select(seg => seg.StartPoint).ToList();
+                        // Add the endpoint of the last segment
+                        if (part.Count > 0)
+                        {
+                            points.Add(part[part.Count - 1].EndPoint);
+                        }
+                        foreach (var pt in points)
+                        {
+                            coords.Add(new[] { pt.X, pt.Y });
+                        }
+                        parts.Add(coords);
+                    }
+                    geoJson["coordinates"] = parts;
+                }
+            }
+            // Polygon
+            else if (geom is Polygon polygon)
+            {
+                if (polygon.PartCount == 1)
+                {
+                    geoJson["type"] = "Polygon";
+                    var rings = new List<List<double[]>>();
+                    foreach (var part in polygon.Parts)
+                    {
+                        var ring = new List<double[]>();
+                        var points = part.AsEnumerable().Select(seg => seg.StartPoint).ToList();
+                        // Add the endpoint of the last segment (which should close the ring)
+                        if (part.Count > 0)
+                        {
+                            points.Add(part[part.Count - 1].EndPoint);
+                        }
+                        foreach (var pt in points)
+                        {
+                            ring.Add(new[] { pt.X, pt.Y });
+                        }
+                        rings.Add(ring);
+                    }
+                    geoJson["coordinates"] = rings;
+                }
+                else
+                {
+                    geoJson["type"] = "MultiPolygon";
+                    var polygons = new List<List<List<double[]>>>();
+                    foreach (var part in polygon.Parts)
+                    {
+                        var rings = new List<List<double[]>>();
+                        var ring = new List<double[]>();
+                        var points = part.AsEnumerable().Select(seg => seg.StartPoint).ToList();
+                        // Add the endpoint of the last segment
+                        if (part.Count > 0)
+                        {
+                            points.Add(part[part.Count - 1].EndPoint);
+                        }
+                        foreach (var pt in points)
+                        {
+                            ring.Add(new[] { pt.X, pt.Y });
+                        }
+                        rings.Add(ring);
+                        polygons.Add(rings);
+                    }
+                    geoJson["coordinates"] = polygons;
+                }
+            }
+            // Envelope (convert to Polygon)
+            else if (geom is Envelope env)
+            {
+                geoJson["type"] = "Polygon";
+                var ring = new List<double[]>
+                {
+                    new[] { env.XMin, env.YMin },
+                    new[] { env.XMax, env.YMin },
+                    new[] { env.XMax, env.YMax },
+                    new[] { env.XMin, env.YMax },
+                    new[] { env.XMin, env.YMin }
+                };
+                geoJson["coordinates"] = new List<List<double[]>> { ring };
+            }
+
+            return geoJson;
         }
     }
 }
