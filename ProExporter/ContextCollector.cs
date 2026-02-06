@@ -457,6 +457,11 @@ namespace ProExporter
             {
                 if (element is ArcGIS.Desktop.Layouts.MapFrame mapFrame)
                 {
+                    info.MapFrames.Add(new MapFrameInfo
+                    {
+                        Name = mapFrame.Name,
+                        MapName = mapFrame.Map?.Name
+                    });
                     info.MapFrameNames.Add(mapFrame.Name);
                 }
             }

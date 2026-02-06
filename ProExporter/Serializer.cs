@@ -73,6 +73,13 @@ namespace ProExporter
             await WriteContextMarkdownAsync(contextMdPath, context);
             files.Add(contextMdPath);
 
+            // Write Mermaid diagram files
+            var mermaidPath = Path.Combine(snapshotFolder, "project-structure.mmd");
+            var mermaidMdPath = Path.Combine(snapshotFolder, "project-structure.md");
+            await WriteMermaidDiagramAsync(mermaidPath, mermaidMdPath, context);
+            files.Add(mermaidPath);
+            files.Add(mermaidMdPath);
+
             // Write AGENTS.md to project root for immediate discoverability
             var projectRoot = Directory.GetParent(outputFolder)?.FullName;
             if (projectRoot != null)
@@ -204,8 +211,18 @@ namespace ProExporter
                     sb.AppendLine($"### {layout.Name}");
                     sb.AppendLine();
                     sb.AppendLine($"- **Size:** {layout.PageWidth} x {layout.PageHeight} {layout.PageUnits}");
-                    if (layout.MapFrameNames.Any())
+                    if (layout.MapFrames.Any())
+                    {
+                        var mapFrames = layout.MapFrames.Select(mapFrame =>
+                            string.IsNullOrWhiteSpace(mapFrame.MapName)
+                                ? mapFrame.Name
+                                : $"{mapFrame.Name} ({mapFrame.MapName})");
+                        sb.AppendLine($"- **Map Frames:** {string.Join(", ", mapFrames)}");
+                    }
+                    else if (layout.MapFrameNames.Any())
+                    {
                         sb.AppendLine($"- **Map Frames:** {string.Join(", ", layout.MapFrameNames)}");
+                    }
                     sb.AppendLine();
                 }
             }
@@ -252,6 +269,150 @@ namespace ProExporter
             }
 
             await File.WriteAllTextAsync(path, sb.ToString(), Encoding.UTF8);
+        }
+
+        /// <summary>
+        /// Write Mermaid diagram files describing project structure
+        /// </summary>
+        private static async Task WriteMermaidDiagramAsync(string mermaidPath, string markdownPath, ExportContext context)
+        {
+            var mermaid = BuildMermaidDiagram(context);
+
+            var md = new StringBuilder();
+            md.AppendLine("# ArcGIS Pro Project Structure");
+            md.AppendLine();
+            md.AppendLine("```mermaid");
+            md.AppendLine(mermaid);
+            md.AppendLine("```");
+            md.AppendLine();
+            md.AppendLine("Rendered with Mermaid-compatible tools (ex: beautiful-mermaid) for visual export.");
+
+            await File.WriteAllTextAsync(mermaidPath, mermaid, Encoding.UTF8);
+            await File.WriteAllTextAsync(markdownPath, md.ToString(), Encoding.UTF8);
+        }
+
+        private static string BuildMermaidDiagram(ExportContext context)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("flowchart LR");
+            sb.AppendLine("%% ArcGIS Pro project structure");
+
+            var projectName = context.Project?.Name ?? "ArcGIS Pro Project";
+            sb.AppendLine($"project[\"Project: {EscapeLabel(projectName)}\"]");
+
+            var layerNameCounts = context.Layers
+                .GroupBy(layer => layer.Name)
+                .ToDictionary(group => group.Key, group => group.Count());
+
+            var mapNodes = new Dictionary<string, string>();
+            var layoutNodes = new Dictionary<string, string>();
+            var layerNodes = new Dictionary<LayerInfo, string>();
+            var sharedLayerNodes = new List<string>();
+
+            var mapIndex = 0;
+            foreach (var map in context.Maps)
+            {
+                mapIndex++;
+                var mapNode = $"map_{mapIndex}";
+                mapNodes[map.Name] = mapNode;
+                sb.AppendLine($"{mapNode}[\"Map: {EscapeLabel(map.Name)}\"]");
+                sb.AppendLine($"project --> {mapNode}");
+            }
+
+            var layoutIndex = 0;
+            foreach (var layout in context.Layouts)
+            {
+                layoutIndex++;
+                var layoutNode = $"layout_{layoutIndex}";
+                layoutNodes[layout.Name] = layoutNode;
+                sb.AppendLine($"{layoutNode}[\"Layout: {EscapeLabel(layout.Name)}\"]");
+                sb.AppendLine($"project --> {layoutNode}");
+            }
+
+            var layerIndex = 0;
+            foreach (var map in context.Maps)
+            {
+                if (!mapNodes.TryGetValue(map.Name, out var mapNode))
+                    continue;
+
+                var mapLayers = context.Layers.Where(layer => layer.MapName == map.Name).ToList();
+                var groupNodesByName = new Dictionary<string, string>();
+
+                foreach (var layer in mapLayers)
+                {
+                    layerIndex++;
+                    var layerNode = $"layer_{layerIndex}";
+                    layerNodes[layer] = layerNode;
+
+                    var layerLabel = layer.LayerType == "GroupLayer"
+                        ? $"Group: {layer.Name}"
+                        : $"Layer: {layer.Name}";
+
+                    sb.AppendLine($"{layerNode}[\"{EscapeLabel(layerLabel)}\"]");
+
+                    if (layer.LayerType == "GroupLayer" && !groupNodesByName.ContainsKey(layer.Name))
+                    {
+                        groupNodesByName[layer.Name] = layerNode;
+                    }
+
+                    if (layerNameCounts.TryGetValue(layer.Name, out var count) && count > 1)
+                    {
+                        sharedLayerNodes.Add(layerNode);
+                    }
+                }
+
+                foreach (var layer in mapLayers)
+                {
+                    var layerNode = layerNodes[layer];
+                    if (!string.IsNullOrEmpty(layer.ParentGroupLayer) &&
+                        groupNodesByName.TryGetValue(layer.ParentGroupLayer, out var parentNode))
+                    {
+                        sb.AppendLine($"{parentNode} --> {layerNode}");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"{mapNode} --> {layerNode}");
+                    }
+                }
+            }
+
+            foreach (var layout in context.Layouts)
+            {
+                if (!layoutNodes.TryGetValue(layout.Name, out var layoutNode))
+                    continue;
+
+                foreach (var mapFrame in layout.MapFrames)
+                {
+                    if (string.IsNullOrWhiteSpace(mapFrame.MapName))
+                        continue;
+
+                    if (mapNodes.TryGetValue(mapFrame.MapName, out var mapNode))
+                    {
+                        sb.AppendLine($"{layoutNode} --> {mapNode}");
+                    }
+                }
+            }
+
+            if (sharedLayerNodes.Any())
+            {
+                sb.AppendLine("classDef sharedLayer fill:#fff4cc,stroke:#d39e00,stroke-width:2px;");
+                sb.AppendLine($"class {string.Join(",", sharedLayerNodes.Distinct())} sharedLayer;");
+            }
+
+            return sb.ToString().TrimEnd();
+        }
+
+        private static string EscapeLabel(string label)
+        {
+            if (string.IsNullOrEmpty(label))
+                return string.Empty;
+
+            return label
+                .Replace("\"", "'")
+                .Replace("[", "(")
+                .Replace("]", ")")
+                .Replace("\r", " ")
+                .Replace("\n", " ");
         }
 
         /// <summary>
@@ -306,6 +467,7 @@ Ask the user to click **Snapshot** in ArcGIS Pro when:
 | `arcgispro connections` | Database/folder connections |
 | `arcgispro notebooks` | Jupyter notebooks in project |
 | `arcgispro context` | Full markdown dump (good for pasting) |
+| `arcgispro diagram` | Render Mermaid diagram of project structure |
 | `arcgispro status` | Validate export files |
 
 ## File Structure
@@ -330,7 +492,9 @@ project_root/
     │   ├── map_*.png       # Screenshots of each map view
     │   └── layout_*.png    # Screenshots of each layout
     └── snapshot/
-        └── context.md      # Human-readable summary
+        ├── context.md      # Human-readable summary
+        ├── project-structure.mmd # Mermaid diagram source
+        └── project-structure.md  # Mermaid diagram markdown
 ```
 
 ## Configuration

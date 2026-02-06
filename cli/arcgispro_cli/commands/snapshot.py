@@ -70,6 +70,8 @@ def snapshot_cmd(path, force):
     context_md = snapshot_folder / "context.md"
     context_skill = snapshot_folder / "CONTEXT_SKILL.md"
     agent_skill = snapshot_folder / "AGENT_TOOL_SKILL.md"
+    diagram_source = snapshot_folder / "project-structure.mmd"
+    diagram_md = snapshot_folder / "project-structure.md"
     
     files_created = 0
     
@@ -90,6 +92,16 @@ def snapshot_cmd(path, force):
         files_created += 1
     else:
         console.print(f"[yellow]⚠[/yellow] AGENT_TOOL_SKILL.md missing")
+
+    if diagram_source.exists():
+        console.print(f"[green]✓[/green] project-structure.mmd exists")
+    else:
+        console.print(f"[yellow]⚠[/yellow] project-structure.mmd missing")
+
+    if diagram_md.exists():
+        console.print(f"[green]✓[/green] project-structure.md exists")
+    else:
+        console.print(f"[yellow]⚠[/yellow] project-structure.md missing")
     
     # Copy images to snapshot folder
     snapshot_images_folder = snapshot_folder / "images"
@@ -115,6 +127,8 @@ def snapshot_cmd(path, force):
         console.print("[bold]Contents:[/bold]")
         console.print(f"  {snapshot_folder}/")
         console.print(f"    context.md         - Human-readable summary")
+        console.print(f"    project-structure.mmd - Mermaid diagram source")
+        console.print(f"    project-structure.md  - Mermaid diagram markdown")
         console.print(f"    CONTEXT_SKILL.md   - How to use exports")
         console.print(f"    AGENT_TOOL_SKILL.md - CLI usage")
         console.print(f"    images/            - {len(images)} PNG files")
