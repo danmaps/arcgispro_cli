@@ -177,7 +177,8 @@ def layers_cmd(path, map_name, broken, as_json):
     for layer in layers:
         visible = "✓" if layer.get("isVisible") else ""
         broken_mark = " ⚠" if layer.get("isBroken") else ""
-        features = f"{layer.get('featureCount', '-'):,}" if layer.get('featureCount') else "-"
+        feature_count = layer.get("featureCount")
+        features = f"{feature_count:,}" if feature_count is not None else "-"
         
         table.add_row(
             f"{layer.get('name', 'Unknown')}{broken_mark}",
