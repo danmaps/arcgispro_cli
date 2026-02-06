@@ -21,13 +21,14 @@ Commands:
     arcgispro connections   - List data connections
     arcgispro notebooks     - List Jupyter notebooks
     arcgispro context       - Print full markdown summary
+    arcgispro diagram       - Render project structure diagram
 """
 
 import click
 from rich.console import Console
 
 from . import __version__
-from .commands import clean, open_project, install, query, launch, notebooks, tui
+from .commands import clean, open_project, install, query, launch, notebooks, tui, diagram
 
 console = Console()
 
@@ -73,6 +74,7 @@ main.add_command(query.tables_cmd, name="tables")
 main.add_command(query.connections_cmd, name="connections")
 main.add_command(notebooks.notebooks_cmd, name="notebooks")
 main.add_command(query.context_cmd, name="context")
+main.add_command(diagram.diagram_cmd, name="diagram")
 main.add_command(tui.tui)
 
 

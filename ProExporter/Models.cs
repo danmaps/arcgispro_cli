@@ -149,6 +149,16 @@ namespace ProExporter
         public double PageHeight { get; set; }
         public string PageUnits { get; set; }
         public List<string> MapFrameNames { get; set; } = new List<string>();
+        public List<MapFrameInfo> MapFrames { get; set; } = new List<MapFrameInfo>();
+    }
+
+    /// <summary>
+    /// Map frame information inside a layout
+    /// </summary>
+    public class MapFrameInfo
+    {
+        public string Name { get; set; }
+        public string MapName { get; set; }
     }
 
     /// <summary>

@@ -51,6 +51,7 @@ ProExporter (Pro add-in) creates detailed flat files that explain the state of y
 | `arcgispro connections` | Data connections |
 | `arcgispro notebooks` | Jupyter notebooks in project |
 | `arcgispro context` | Full markdown dump |
+| `arcgispro diagram` | Render Mermaid diagram of project structure |
 
 Add `--json` to any query command for machine-readable output.
 
@@ -118,7 +119,9 @@ project_root/
     │   ├── map_*.png          # Screenshots of each map view
     │   └── layout_*.png       # Screenshots of each layout
     └── snapshot/
-        └── context.md         # Human-readable summary
+        ├── context.md         # Human-readable summary
+        ├── project-structure.mmd # Mermaid diagram source
+        └── project-structure.md  # Mermaid diagram markdown
 ```
 
 The `AGENTS.md` file teaches AI agents how to use the CLI and interpret the exported data; no user explanation needed.

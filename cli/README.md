@@ -27,6 +27,9 @@ arcgispro images
 # Assemble snapshot
 arcgispro snapshot
 
+# Render project diagram
+arcgispro diagram
+
 # Clean up exports
 arcgispro clean --all
 
@@ -86,6 +89,8 @@ The CLI reads from `.arcgispro/` folder created by the add-in:
 │   └── layouts.json
 ├── snapshot/
 │   ├── context.md
+│   ├── project-structure.mmd
+│   ├── project-structure.md
 │   ├── CONTEXT_SKILL.md
 │   └── AGENT_TOOL_SKILL.md
 └── images/
