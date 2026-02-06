@@ -110,7 +110,8 @@ def inspect_cmd(path, no_suggestions):
         for layer in layers[:15]:  # Limit to first 15
             visible = "✓" if layer.get("isVisible") else "✗"
             broken = " [red]⚠[/red]" if layer.get("isBroken") else ""
-            features = f"{layer.get('featureCount', '-'):,}" if layer.get('featureCount') else "-"
+            feature_count = layer.get("featureCount")
+            features = f"{feature_count:,}" if feature_count is not None else "-"
             
             table.add_row(
                 f"{layer.get('name', 'Unknown')}{broken}",
