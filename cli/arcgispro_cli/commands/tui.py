@@ -8,7 +8,8 @@ def tui():
 
 @tui.command("run", help="Start the ArcGIS Pro TUI")
 @click.option("--repo", default=".", help="Working directory (optional)")
-def run(repo: str) -> None:
+@click.option("--no-banner", is_flag=True, help="Disable the ASCII banner")
+def run(repo: str, no_banner: bool) -> None:
     from arcgispro_cli.tui.app import ArcGISProCLIApp
 
-    ArcGISProCLIApp(repo_path=repo).run()
+    ArcGISProCLIApp(repo_path=repo, show_banner=(not no_banner)).run()
