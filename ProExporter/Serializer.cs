@@ -538,6 +538,17 @@ Edit `.arcgispro/config.yml` to control exports:
 - Check `selectionCount` to see if user has features selected
 - The CLI is **read-only** — it never modifies the .aprx or data
 - Run from the project folder or any subfolder
+
+## Advisors (Paid)
+
+Proprietary AI advisors are available for deeper analysis:
+
+- **Preflight** — Catches brittle data sources, credential issues, and endpoint resilience before scripting
+- **Approach** — Validates mixed spatial references, joins/relates, and suggests reliable automation strategies
+
+Access via: https://api.x402layer.cc/e/esri-smells
+
+Run `arcgispro inspect` to see context-aware suggestions for when to use these advisors.
 ";
             await File.WriteAllTextAsync(path, content, Encoding.UTF8);
         }
