@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Header, Footer
+from textual.widgets import Footer
 
 from arcgispro_cli.tui.banner import Banner
 from arcgispro_cli.tui.panels.project_tree import ProjectTree
@@ -27,7 +27,6 @@ class ArcGISProCLIApp(App):
         self.show_banner = show_banner
 
     def compose(self) -> ComposeResult:
-        yield Header(show_clock=False)
         yield Banner(enabled=self.show_banner, id="banner")
         with Horizontal(id="main"):
             yield ProjectTree(id="tree-panel", state=self.state)

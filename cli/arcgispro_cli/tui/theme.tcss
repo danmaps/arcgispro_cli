@@ -1,6 +1,13 @@
 Screen {
   background: #000000;
   color: #F5F5F5;
+  layout: vertical;
+}
+
+#banner {
+  height: auto;
+  max-height: 12;
+  padding: 0 1;
 }
 
 #main {
@@ -14,10 +21,12 @@ Screen {
 
 #tree-panel {
   width: 36%;
+  height: 100%;
 }
 
 #right {
   width: 64%;
+  height: 100%;
 }
 
 #detail {
