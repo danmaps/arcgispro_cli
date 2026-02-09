@@ -113,3 +113,11 @@ class ProjectTree(Tree):
             self.state.selected_kind = kind
             self.state.selected_item = node.data
             self.post_message(self.ItemSelected(kind, node.data))
+
+    def on_tree_node_highlighted(self, event: Tree.NodeHighlighted) -> None:
+        node: TreeNode = event.node
+        if node.data:
+            kind = node.data.get("_kind", "unknown")
+            self.state.selected_kind = kind
+            self.state.selected_item = node.data
+            self.post_message(self.ItemSelected(kind, node.data))
