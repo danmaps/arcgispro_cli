@@ -203,12 +203,19 @@ namespace ProExporter
             // Get current ArcGIS Pro process ID for arcpy to connect to
             var proProcessId = Process.GetCurrentProcess().Id;
 
+            // Ensure the Python startup hook exists so any python process launched from this terminal
+            // self-heals stale ArcGISProTemp* workspace paths.
+            EnsurePythonStartupHook(projectDir);
+
             string args;
             if (File.Exists(activateBat) && File.Exists(pythonEnvUtils))
             {
                 // Set ARCGISPRO_PID so arcpy connects to this running Pro session
-                // This prevents "Directory does not exist" errors with stale temp paths
+                // Set ARCGISPRO_PROJECT_DIR and add .arcgispro/ to PYTHONPATH so Python auto-imports sitecustomize.py
+                // This prevents "Directory does not exist" errors with stale temp paths.
                 args = $"/k \"set ARCGISPRO_PID={proProcessId} && " +
+                       $"set ARCGISPRO_PROJECT_DIR=\"{projectDir}\" && " +
+                       $"set PYTHONPATH=\"{Path.Combine(projectDir, ".arcgispro")}\";%PYTHONPATH% && " +
                        $"set CONDA_SKIPCHECK=1 && " +
                        $"for /f \"delims=\" %i in ('\"{pythonEnvUtils}\"') do @call \"{activateBat}\" \"%i\" && " +
                        $"cd /d \"{projectDir}\"\"";
@@ -216,7 +223,10 @@ namespace ProExporter
             else
             {
                 // Fallback: set PID and open at project folder
-                args = $"/k \"set ARCGISPRO_PID={proProcessId} && cd /d \"{projectDir}\"\"";
+                args = $"/k \"set ARCGISPRO_PID={proProcessId} && " +
+                       $"set ARCGISPRO_PROJECT_DIR=\"{projectDir}\" && " +
+                       $"set PYTHONPATH=\"{Path.Combine(projectDir, ".arcgispro")}\";%PYTHONPATH% && " +
+                       $"cd /d \"{projectDir}\"\"";
             }
 
             try
@@ -256,16 +266,107 @@ namespace ProExporter
                     proTempPath = Path.Combine(Path.GetTempPath(), $"ArcGISProTemp{processId}")
                 };
 
-                var json = JsonSerializer.Serialize(sessionInfo, new JsonSerializerOptions 
-                { 
-                    WriteIndented = true 
+                var json = JsonSerializer.Serialize(sessionInfo, new JsonSerializerOptions
+                {
+                    WriteIndented = true
                 });
-                
+
                 File.WriteAllText(Path.Combine(arcgisproFolder, "session.json"), json);
             }
             catch
             {
                 // Non-critical - continue even if session export fails
+            }
+        }
+
+        /// <summary>
+        /// Writes a Python sitecustomize.py into .arcgispro so any python process started from the Terminal
+        /// can automatically repair stale workspace paths (ArcGISProTemp*) and prefer a stable project scratch.gdb.
+        /// </summary>
+        private void EnsurePythonStartupHook(string projectDir)
+        {
+            try
+            {
+                var arcgisproFolder = Path.Combine(projectDir, ".arcgispro");
+                Directory.CreateDirectory(arcgisproFolder);
+
+                var hookPath = Path.Combine(arcgisproFolder, "sitecustomize.py");
+
+                // Keep this intentionally small, defensive, and silent.
+                // - If arcpy isn't available, do nothing.
+                // - If scratch/workspace points at a missing ArcGISProTemp* path, clear it.
+                // - If we can, set scratch/workspace to <project>/scratch.gdb (create if missing).
+                var code = @"# Auto-run hook for ArcGIS Pro Terminal sessions.
+# Loaded automatically by Python if this folder is on PYTHONPATH.
+
+import os
+
+
+def _exists(p: str) -> bool:
+    try:
+        return bool(p) and os.path.exists(p)
+    except Exception:
+        return False
+
+
+def _looks_like_stale_pro_temp(p: str) -> bool:
+    try:
+        if not p:
+            return False
+        s = str(p)
+        return ("ArcGISProTemp" in s) and (not os.path.exists(s))
+    except Exception:
+        return False
+
+
+def _main() -> None:
+    try:
+        import arcpy  # type: ignore
+    except Exception:
+        return
+
+    project_dir = (os.environ.get("ARCGISPRO_PROJECT_DIR") or "").strip().strip('"')
+
+    # 1) Clear stale ArcGISProTemp* references if present
+    try:
+        sw = getattr(arcpy.env, "scratchWorkspace", None)
+        if _looks_like_stale_pro_temp(sw):
+            arcpy.ClearEnvironment("scratchWorkspace")
+    except Exception:
+        pass
+
+    try:
+        ws = getattr(arcpy.env, "workspace", None)
+        if _looks_like_stale_pro_temp(ws):
+            arcpy.ClearEnvironment("workspace")
+    except Exception:
+        pass
+
+    # 2) Prefer a stable, project-local scratch.gdb
+    if project_dir and _exists(project_dir):
+        scratch_gdb = os.path.join(project_dir, "scratch.gdb")
+        try:
+            if not arcpy.Exists(scratch_gdb):
+                arcpy.management.CreateFileGDB(project_dir, "scratch.gdb")
+            arcpy.env.scratchWorkspace = scratch_gdb
+            arcpy.env.workspace = scratch_gdb
+        except Exception:
+            # Don't block user scripts if we can't create/use scratch.gdb.
+            pass
+
+
+try:
+    _main()
+except Exception:
+    # Never crash Python startup.
+    pass
+";
+
+                File.WriteAllText(hookPath, code);
+            }
+            catch
+            {
+                // Non-critical - continue even if hook write fails
             }
         }
     }
