@@ -532,6 +532,49 @@ Edit `.arcgispro/config.yml` to control exports:
 - `cellCount` — Total number of cells
 - `cellBreakdown` — Count by type (markdown, code)
 
+## Task Checkpoints (for agent-driven work)
+
+If you generate **analysis or automation artifacts** for a specific request/task (scripts, notebooks, conclusions, data transforms), write a small checkpoint note **once per task** and commit it alongside the work.
+
+- Filename: `checkpoint_YYYYMMDDTHHMMSSZ.md` (UTC, filesystem-safe)
+- Location: project root (same folder as this `AGENTS.md`)
+
+Template:
+
+```md
+# Checkpoint (YYYY-MM-DDTHH:MM:SSZ)
+
+## Intent
+What question are we answering?
+
+## Inputs
+- Datasets:
+- Layer names:
+- Environment assumptions:
+
+## Constraints
+- Accuracy:
+- Performance:
+- Governance / access rules:
+
+## Decisions
+- Key forks taken and why
+- Alternatives considered
+
+## Validation
+- Counts checked:
+- Spot checks:
+- Maps reviewed:
+
+## Next
+What you’d do if this was asked again.
+```
+
+Notes:
+- This is **not** required for every conversation turn.
+- This is **not** required for every commit.
+- It is required when the agent’s work would otherwise be hard to audit or reproduce.
+
 ## Tips
 
 - Use `arcgispro layer ""partial""` — partial name matching works
