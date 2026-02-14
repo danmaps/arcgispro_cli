@@ -64,6 +64,9 @@ namespace ProExporter
                     context.Tables.AddRange(tables);
                 }
 
+                // Best-effort stable IDs for maps/layers/tables
+                AssignStableIds(context);
+
                 // Collect layouts
                 var layouts = project.GetItems<LayoutProjectItem>();
                 foreach (var layoutItem in layouts)
@@ -88,6 +91,60 @@ namespace ProExporter
             });
             
             return context ?? new ExportContext { Meta = new MetaInfo() };
+        }
+
+        private static void AssignStableIds(ExportContext context)
+        {
+            try
+            {
+                var projectUri = context?.Project?.Path ?? "";
+
+                // Maps
+                var mapByName = new Dictionary<string, MapInfo>(StringComparer.OrdinalIgnoreCase);
+                foreach (var m in (context?.Maps ?? new List<MapInfo>()))
+                {
+                    if (m == null) continue;
+                    m.Id = StableIds.ForMap(projectUri, m);
+                    if (!string.IsNullOrWhiteSpace(m.Name))
+                        mapByName[m.Name] = m;
+                }
+
+                // Layers
+                foreach (var l in (context?.Layers ?? new List<LayerInfo>()))
+                {
+                    if (l == null) continue;
+                    var layerPath = BuildLayerPath(l);
+                    l.Id = StableIds.ForLayer(projectUri, l, layerPath);
+                }
+
+                // Tables
+                foreach (var t in (context?.Tables ?? new List<TableInfo>()))
+                {
+                    if (t == null) continue;
+                    t.Id = StableIds.ForTable(projectUri, t);
+                }
+            }
+            catch
+            {
+                // Non-critical
+            }
+        }
+
+        private static string BuildLayerPath(LayerInfo layer)
+        {
+            // For now we only have ParentGroupLayer (single level) and Name.
+            // This keeps the ID stable for many cases, and DataSourcePath covers the rest.
+            try
+            {
+                if (layer == null) return "";
+                if (!string.IsNullOrWhiteSpace(layer.ParentGroupLayer))
+                    return $"{layer.ParentGroupLayer}/{layer.Name}";
+                return layer.Name ?? "";
+            }
+            catch
+            {
+                return layer?.Name ?? "";
+            }
         }
 
         /// <summary>

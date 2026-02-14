@@ -33,6 +33,10 @@ namespace ProExporter
     /// </summary>
     public class MapInfo
     {
+        /// <summary>
+        /// Stable identifier for this map (best-effort).
+        /// </summary>
+        public string Id { get; set; }
         public string Name { get; set; }
         public string MapType { get; set; }  // "Map" or "Scene"
         public string SpatialReferenceName { get; set; }
@@ -61,6 +65,10 @@ namespace ProExporter
     /// </summary>
     public class LayerInfo
     {
+        /// <summary>
+        /// Stable identifier for this layer (best-effort).
+        /// </summary>
+        public string Id { get; set; }
         public string Name { get; set; }
         public string MapName { get; set; }
         public string LayerType { get; set; }  // FeatureLayer, RasterLayer, GroupLayer, etc.
@@ -101,6 +109,10 @@ namespace ProExporter
     /// </summary>
     public class TableInfo
     {
+        /// <summary>
+        /// Stable identifier for this table (best-effort).
+        /// </summary>
+        public string Id { get; set; }
         public string Name { get; set; }
         public string MapName { get; set; }
         public string DataSourcePath { get; set; }
