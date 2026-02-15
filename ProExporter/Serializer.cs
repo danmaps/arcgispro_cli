@@ -68,6 +68,10 @@ namespace ProExporter
             await WriteJsonAsync(notebooksPath, context.Notebooks);
             files.Add(notebooksPath);
 
+            var geoprocessingPath = Path.Combine(contextFolder, "geoprocessing.json");
+            await WriteJsonAsync(geoprocessingPath, context.Geoprocessing);
+            files.Add(geoprocessingPath);
+
             // Write human-readable markdown
             var contextMdPath = Path.Combine(snapshotFolder, "context.md");
             await WriteContextMarkdownAsync(contextMdPath, context);
@@ -198,6 +202,31 @@ namespace ProExporter
                     var source = table.DataSourceType ?? "-";
                     sb.AppendLine($"| {table.Name} | {rowCount} | {source} |");
                 }
+                sb.AppendLine();
+            }
+
+            // Geoprocessing section
+            if (context.Geoprocessing != null)
+            {
+                sb.AppendLine("## Geoprocessing history");
+                sb.AppendLine();
+                sb.AppendLine($"- **Count:** {context.Geoprocessing.Count}");
+
+                if (context.Geoprocessing.History != null && context.Geoprocessing.History.Any())
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("| Tool | Started | Ended | Succeeded |");
+                    sb.AppendLine("|------|---------|-------|-----------|");
+                    foreach (var h in context.Geoprocessing.History)
+                    {
+                        var tool = string.IsNullOrEmpty(h.DisplayName) ? h.ToolName : h.DisplayName;
+                        var started = h.StartedAt?.ToString("u") ?? "-";
+                        var ended = h.EndedAt?.ToString("u") ?? "-";
+                        var ok = h.Succeeded.HasValue ? (h.Succeeded.Value ? "✅" : "❌") : "-";
+                        sb.AppendLine($"| {tool} | {started} | {ended} | {ok} |");
+                    }
+                }
+
                 sb.AppendLine();
             }
 
