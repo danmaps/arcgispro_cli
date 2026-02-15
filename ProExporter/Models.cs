@@ -187,6 +187,28 @@ namespace ProExporter
     }
 
     /// <summary>
+    /// Geoprocessing history entry (flattened, safe-by-default)
+    /// </summary>
+    public class GeoprocessingHistoryItem
+    {
+        public string ToolName { get; set; }
+        public string DisplayName { get; set; }
+        public DateTime? StartedAt { get; set; }
+        public DateTime? EndedAt { get; set; }
+        public bool? Succeeded { get; set; }
+        public int? MessageCount { get; set; }
+    }
+
+    /// <summary>
+    /// Geoprocessing history (project/session)
+    /// </summary>
+    public class GeoprocessingInfo
+    {
+        public int Count { get; set; }
+        public List<GeoprocessingHistoryItem> History { get; set; } = new List<GeoprocessingHistoryItem>();
+    }
+
+    /// <summary>
     /// Complete export context containing all collected information
     /// </summary>
     public class ExportContext
@@ -199,6 +221,7 @@ namespace ProExporter
         public List<ConnectionInfo> Connections { get; set; } = new List<ConnectionInfo>();
         public List<LayoutInfo> Layouts { get; set; } = new List<LayoutInfo>();
         public List<NotebookInfo> Notebooks { get; set; } = new List<NotebookInfo>();
+        public GeoprocessingInfo Geoprocessing { get; set; } = new GeoprocessingInfo();
     }
 
     /// <summary>

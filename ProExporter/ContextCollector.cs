@@ -88,6 +88,9 @@ namespace ProExporter
                 {
                     context.Notebooks = CollectNotebooks();
                 }
+
+                // Collect geoprocessing history (best-effort)
+                context.Geoprocessing = GeoprocessingCollector.Collect();
             });
             
             return context ?? new ExportContext { Meta = new MetaInfo() };
