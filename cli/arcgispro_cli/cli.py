@@ -24,16 +24,24 @@ Commands:
     arcgispro diagram       - Render project structure diagram
 """
 
+import sys
+import io
+
 import click
 from rich.console import Console
 
 from . import __version__
 from .commands import clean, open_project, install, query, launch, notebooks, tui, diagram
+from .tui.banner import _colorize_logo
+
+# Ensure Unicode output on Windows
+if sys.stdout.encoding != "utf-8":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 console = Console()
 
 
-@click.group()
+@click.group(invoke_without_command=True)
 @click.version_option(version=__version__, prog_name="arcgispro")
 @click.pass_context
 def main(ctx):
@@ -53,6 +61,10 @@ def main(ctx):
         arcgispro fields "Parcels"   # Get field schema
     """
     ctx.ensure_object(dict)
+    if ctx.invoked_subcommand is None:
+        console.print(_colorize_logo())
+        console.print()
+        console.print(ctx.get_help())
 
 
 # Setup commands
@@ -75,7 +87,7 @@ main.add_command(query.connections_cmd, name="connections")
 main.add_command(notebooks.notebooks_cmd, name="notebooks")
 main.add_command(query.context_cmd, name="context")
 main.add_command(diagram.diagram_cmd, name="diagram")
-main.add_command(tui.tui)
+main.add_command(tui.tui_cmd, name="tui")
 
 
 if __name__ == "__main__":

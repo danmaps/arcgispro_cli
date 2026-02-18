@@ -70,10 +70,10 @@ class DetailPanel(Static):
         # Check for map image
         ap = self.state.arcgispro_path
         if ap:
-            from arcgispro_cli.paths import get_images_folder
+            from arcgispro_cli.paths import get_images_folder, sanitize_map_name
             img_folder = get_images_folder(ap)
-            map_name = d.get('name', '').replace(' ', '_')
-            img_path = img_folder / f"{map_name}.png"
+            sanitized = sanitize_map_name(d.get('name', ''))
+            img_path = img_folder / f"map_{sanitized}.png"
             if img_path.exists():
                 lines.append(f"\n[dim]Image: {img_path.name}[/dim]")
         

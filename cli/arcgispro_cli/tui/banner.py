@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from rich.text import Text
 from textual.widget import Widget
 from textual.widgets import Static
 
@@ -17,6 +18,24 @@ LOGO = """\
 ██║  ██║██║  ██║╚██████╗╚██████╔╝██║███████║██║     ██║  ██║╚██████╔╝   ╚██████╗███████╗██║
 ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚═╝╚══════╝╚═╝     ╚═╝  ╚═╝ ╚═════╝     ╚═════╝╚══════╝╚═╝"""
 
+SHADOW_CHARS = set("╔╗╚╝═║")
+BLOCK_COLOR = "#87CEEB"
+SHADOW_COLOR = "#555555"
+
+
+def _colorize_logo() -> Text:
+    """Apply light blue to block chars and dark grey to shadow chars."""
+    text = Text()
+    for ch in LOGO:
+        if ch in SHADOW_CHARS:
+            text.append(ch, style=SHADOW_COLOR)
+        elif ch == "\n" or ch == " ":
+            text.append(ch)
+        else:
+            text.append(ch, style=BLOCK_COLOR)
+    text.append(f"\n{TAGLINE}  ·  v{__version__}", style="dim")
+    return text
+
 
 class Banner(Widget):
     """Top-of-screen banner with oh-my-logo rendering."""
@@ -25,7 +44,6 @@ class Banner(Widget):
     Banner {
         height: auto;
     }
-    Banner > Static { color: #87CEEB; }
     """
 
     def __init__(self, *, enabled: bool = True, **kwargs):
@@ -47,5 +65,4 @@ class Banner(Widget):
             self._body.update("")
             return
 
-        text = f"{LOGO}\n{TAGLINE}  ·  v{__version__}"
-        self._body.update(text)
+        self._body.update(_colorize_logo())

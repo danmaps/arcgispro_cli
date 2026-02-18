@@ -50,6 +50,39 @@ def get_snapshot_folder(arcgispro_path: Path) -> Path:
     return arcgispro_path / "snapshot"
 
 
+def sanitize_map_name(name: str) -> str:
+    """
+    Sanitize a map name for use as a filename.
+    
+    Replicates the C# SanitizeFileName logic from ImageExporter.cs.
+    Replaces invalid filename characters with underscores, truncates to 50 chars.
+    
+    Args:
+        name: The map or layer name to sanitize.
+        
+    Returns:
+        Sanitized filename without extension, or "unnamed" if empty.
+    """
+    if not name or not name.strip():
+        return "unnamed"
+    
+    # Invalid filename characters: / \ : * ? " < > |
+    invalid_chars = ['/', '\\', ':', '*', '?', '"', '<', '>', '|']
+    
+    sanitized = name
+    for char in invalid_chars:
+        sanitized = sanitized.replace(char, '_')
+    
+    # Replace spaces with underscores
+    sanitized = sanitized.replace(' ', '_')
+    
+    # Truncate to 50 characters
+    if len(sanitized) > 50:
+        sanitized = sanitized[:50]
+    
+    return sanitized
+
+
 def load_json_file(path: Path) -> Optional[Dict[str, Any]]:
     """
     Load and parse a JSON file.
