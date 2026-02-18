@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Contracts;
+using ArcGIS.Desktop.Mapping;
 
 namespace ProExporter
 {
@@ -26,7 +27,8 @@ namespace ProExporter
             try
             {
                 var controller = new ExportController();
-                var result = await controller.RunSnapshotAsync();
+                var options = RibbonExportFilterState.ApplyTo(ExportOptions.Default);
+                var result = await controller.RunSnapshotAsync(options);
 
                 if (result.Success)
                 {
@@ -76,7 +78,8 @@ namespace ProExporter
 
             try
             {
-                var result = await _controller.RunContextExportAsync();
+                var options = RibbonExportFilterState.ApplyTo(ExportOptions.Default);
+                var result = await _controller.RunContextExportAsync(options);
 
                 if (result.Success)
                 {
@@ -119,7 +122,8 @@ namespace ProExporter
 
             try
             {
-                var result = await _controller.RunImageExportAsync();
+                var options = RibbonExportFilterState.ApplyTo(ExportOptions.Default);
+                var result = await _controller.RunImageExportAsync(options);
 
                 if (result.Success)
                 {
@@ -296,7 +300,8 @@ namespace ProExporter
                 // - If arcpy isn't available, do nothing.
                 // - If scratch/workspace points at a missing ArcGISProTemp* path, clear it.
                 // - If we can, set scratch/workspace to <project>/scratch.gdb (create if missing).
-                var code = @"# Auto-run hook for ArcGIS Pro Terminal sessions.
+                var code = """
+# Auto-run hook for ArcGIS Pro Terminal sessions.
 # Loaded automatically by Python if this folder is on PYTHONPATH.
 
 import os
@@ -360,13 +365,133 @@ try:
 except Exception:
     # Never crash Python startup.
     pass
-";
+""";
 
                 File.WriteAllText(hookPath, code);
             }
             catch
             {
                 // Non-critical - continue even if hook write fails
+            }
+        }
+    }
+
+    public class MapFilterComboBox : ComboBox
+    {
+        private const string AllMaps = "All maps";
+        private const string IncludePrefix = "Include only: ";
+        private const string ExcludePrefix = "Exclude: ";
+
+        public MapFilterComboBox()
+        {
+            RebuildItems();
+        }
+
+        protected override void OnDropDownOpened()
+        {
+            RebuildItems();
+            base.OnDropDownOpened();
+        }
+
+        protected override void OnSelectionChange(ComboBoxItem item)
+        {
+            if (item == null)
+                return;
+
+            var text = item.Text ?? string.Empty;
+            if (text.Equals(AllMaps, StringComparison.OrdinalIgnoreCase))
+            {
+                RibbonExportFilterState.MapSelectionMode = MapSelectionMode.All;
+                RibbonExportFilterState.SelectedMapName = null;
+                return;
+            }
+
+            if (text.StartsWith(IncludePrefix, StringComparison.Ordinal))
+            {
+                RibbonExportFilterState.MapSelectionMode = MapSelectionMode.IncludeOnly;
+                RibbonExportFilterState.SelectedMapName = text.Substring(IncludePrefix.Length);
+                return;
+            }
+
+            if (text.StartsWith(ExcludePrefix, StringComparison.Ordinal))
+            {
+                RibbonExportFilterState.MapSelectionMode = MapSelectionMode.Exclude;
+                RibbonExportFilterState.SelectedMapName = text.Substring(ExcludePrefix.Length);
+            }
+        }
+
+        private void RebuildItems()
+        {
+            while (ItemCollection.Count > 0)
+            {
+                RemoveAt(0);
+            }
+
+            Add(new ComboBoxItem(AllMaps));
+
+            var mapNames = RibbonExportFilterState.GetProjectMapNames();
+            foreach (var mapName in mapNames)
+            {
+                Add(new ComboBoxItem($"{IncludePrefix}{mapName}"));
+                Add(new ComboBoxItem($"{ExcludePrefix}{mapName}"));
+            }
+
+            SelectedItem = ResolveSelectedItem();
+        }
+
+        private object ResolveSelectedItem()
+        {
+            string targetText;
+            switch (RibbonExportFilterState.MapSelectionMode)
+            {
+                case MapSelectionMode.IncludeOnly:
+                    targetText = $"{IncludePrefix}{RibbonExportFilterState.SelectedMapName}";
+                    break;
+
+                case MapSelectionMode.Exclude:
+                    targetText = $"{ExcludePrefix}{RibbonExportFilterState.SelectedMapName}";
+                    break;
+
+                default:
+                    targetText = AllMaps;
+                    break;
+            }
+
+            foreach (var item in ItemCollection)
+            {
+                if (item is ComboBoxItem comboBoxItem &&
+                    string.Equals(comboBoxItem.Text, targetText, StringComparison.Ordinal))
+                {
+                    return comboBoxItem;
+                }
+            }
+
+            return ItemCollection.Count > 0 ? ItemCollection[0] : null;
+        }
+    }
+
+    public class ActiveMapOnlyCheckBox : CheckBox
+    {
+        public ActiveMapOnlyCheckBox()
+        {
+            IsChecked = RibbonExportFilterState.ActiveMapOnly;
+        }
+
+        protected override void OnClick()
+        {
+            var next = !(IsChecked ?? false);
+            IsChecked = next;
+            RibbonExportFilterState.ActiveMapOnly = next;
+        }
+
+        protected override void OnUpdate()
+        {
+            var hasActiveMap = MapView.Active?.Map != null;
+            Enabled = hasActiveMap;
+            if (!hasActiveMap)
+            {
+                IsChecked = false;
+                RibbonExportFilterState.ActiveMapOnly = false;
             }
         }
     }

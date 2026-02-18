@@ -58,9 +58,10 @@ namespace ProExporter
         /// <summary>
         /// Run images-only export
         /// </summary>
-        public async Task<ExportResult> RunImageExportAsync()
+        public async Task<ExportResult> RunImageExportAsync(ExportOptions options = null)
         {
-            return await RunExportAsync(exportContext: false, exportImages: true, options: ExportOptions.Default);
+            options ??= ExportOptions.Default;
+            return await RunExportAsync(exportContext: false, exportImages: true, options: options);
         }
 
         /// <summary>
@@ -124,7 +125,7 @@ namespace ProExporter
                 {
                     try
                     {
-                        var imageFiles = await ImageExporter.ExportAllAsync(outputFolder, ct);
+                        var imageFiles = await ImageExporter.ExportAllAsync(outputFolder, options, ct);
                         result.FilesCreated.AddRange(imageFiles);
 
                         if (imageFiles.Count == 0)

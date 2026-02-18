@@ -26,19 +26,23 @@ namespace ProExporter
         /// <summary>
         /// Export all map views and layouts to images
         /// </summary>
-        public static async Task<List<string>> ExportAllAsync(string outputFolder, CancellationToken cancellationToken = default)
+        public static async Task<List<string>> ExportAllAsync(string outputFolder, ExportOptions options, CancellationToken cancellationToken = default)
         {
+            options ??= ExportOptions.Default;
             var exportedFiles = new List<string>();
             var imagesFolder = Path.Combine(outputFolder, "images");
             Directory.CreateDirectory(imagesFolder);
 
             // Export active map view
-            var mapFiles = await ExportMapViewsAsync(imagesFolder, cancellationToken);
+            var mapFiles = await ExportMapViewsAsync(imagesFolder, options, cancellationToken);
             exportedFiles.AddRange(mapFiles);
 
             // Export layouts
-            var layoutFiles = await ExportLayoutsAsync(imagesFolder, cancellationToken);
-            exportedFiles.AddRange(layoutFiles);
+            if (!options.ActiveMapOnly)
+            {
+                var layoutFiles = await ExportLayoutsAsync(imagesFolder, cancellationToken);
+                exportedFiles.AddRange(layoutFiles);
+            }
 
             return exportedFiles;
         }
@@ -46,8 +50,9 @@ namespace ProExporter
         /// <summary>
         /// Export the active map view to PNG
         /// </summary>
-        public static async Task<List<string>> ExportMapViewsAsync(string outputFolder, CancellationToken cancellationToken = default)
+        public static async Task<List<string>> ExportMapViewsAsync(string outputFolder, ExportOptions options, CancellationToken cancellationToken = default)
         {
+            options ??= ExportOptions.Default;
             var exportedFiles = new List<string>();
             
             // Ensure output directory exists
@@ -64,6 +69,9 @@ namespace ProExporter
 
                 var map = mapView.Map;
                 if (map == null)
+                    return;
+
+                if (!options.ShouldIncludeMap(map.Name, isActiveMap: true))
                     return;
 
                 // Create safe filename from map name

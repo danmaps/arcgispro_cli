@@ -52,6 +52,10 @@ namespace ProExporter
                     var map = mapItem.GetMap();
                     if (map == null) continue;
 
+                    var isActiveMap = MapView.Active?.Map?.Name == map.Name;
+                    if (!options.ShouldIncludeMap(map.Name, isActiveMap))
+                        continue;
+
                     var mapInfo = CollectMapInfo(map);
                     context.Maps.Add(mapInfo);
 
@@ -63,6 +67,8 @@ namespace ProExporter
                     var tables = CollectTableInfo(map, options.ExportFields, options.SampleRowCount);
                     context.Tables.AddRange(tables);
                 }
+
+                context.Project.MapNames = context.Maps.Select(m => m.Name).ToList();
 
                 // Best-effort stable IDs for maps/layers/tables
                 AssignStableIds(context);
