@@ -124,6 +124,7 @@ def load_context_files(arcgispro_path: Path) -> Dict[str, Any]:
         "tables": load_json_file(context_dir / "tables.json"),
         "connections": load_json_file(context_dir / "connections.json"),
         "layouts": load_json_file(context_dir / "layouts.json"),
+        "geoprocessing": load_json_file(context_dir / "geoprocessing.json"),
     }
 
 

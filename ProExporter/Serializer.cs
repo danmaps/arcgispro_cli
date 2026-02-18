@@ -68,6 +68,10 @@ namespace ProExporter
             await WriteJsonAsync(notebooksPath, context.Notebooks);
             files.Add(notebooksPath);
 
+            var geoprocessingPath = Path.Combine(contextFolder, "geoprocessing.json");
+            await WriteJsonAsync(geoprocessingPath, context.Geoprocessing);
+            files.Add(geoprocessingPath);
+
             // Write human-readable markdown
             var contextMdPath = Path.Combine(snapshotFolder, "context.md");
             await WriteContextMarkdownAsync(contextMdPath, context);
@@ -198,6 +202,31 @@ namespace ProExporter
                     var source = table.DataSourceType ?? "-";
                     sb.AppendLine($"| {table.Name} | {rowCount} | {source} |");
                 }
+                sb.AppendLine();
+            }
+
+            // Geoprocessing section
+            if (context.Geoprocessing != null)
+            {
+                sb.AppendLine("## Geoprocessing history");
+                sb.AppendLine();
+                sb.AppendLine($"- **Count:** {context.Geoprocessing.Count}");
+
+                if (context.Geoprocessing.History != null && context.Geoprocessing.History.Any())
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("| Tool | Started | Ended | Succeeded |");
+                    sb.AppendLine("|------|---------|-------|-----------|");
+                    foreach (var h in context.Geoprocessing.History)
+                    {
+                        var tool = string.IsNullOrEmpty(h.DisplayName) ? h.ToolName : h.DisplayName;
+                        var started = h.StartedAt?.ToString("u") ?? "-";
+                        var ended = h.EndedAt?.ToString("u") ?? "-";
+                        var ok = h.Succeeded.HasValue ? (h.Succeeded.Value ? "✅" : "❌") : "-";
+                        sb.AppendLine($"| {tool} | {started} | {ended} | {ok} |");
+                    }
+                }
+
                 sb.AppendLine();
             }
 
@@ -531,6 +560,49 @@ Edit `.arcgispro/config.yml` to control exports:
 - `description` — First markdown cell (or code cell if no markdown)
 - `cellCount` — Total number of cells
 - `cellBreakdown` — Count by type (markdown, code)
+
+## Task Checkpoints (for agent-driven work)
+
+If you generate **analysis or automation artifacts** for a specific request/task (scripts, notebooks, conclusions, data transforms), write a small checkpoint note **once per task** and commit it alongside the work.
+
+- Filename: `checkpoint_YYYYMMDDTHHMMSSZ.md` (UTC, filesystem-safe)
+- Location: project root (same folder as this `AGENTS.md`)
+
+Template:
+
+```md
+# Checkpoint (YYYY-MM-DDTHH:MM:SSZ)
+
+## Intent
+What question are we answering?
+
+## Inputs
+- Datasets:
+- Layer names:
+- Environment assumptions:
+
+## Constraints
+- Accuracy:
+- Performance:
+- Governance / access rules:
+
+## Decisions
+- Key forks taken and why
+- Alternatives considered
+
+## Validation
+- Counts checked:
+- Spot checks:
+- Maps reviewed:
+
+## Next
+What you’d do if this was asked again.
+```
+
+Notes:
+- This is **not** required for every conversation turn.
+- This is **not** required for every commit.
+- It is required when the agent’s work would otherwise be hard to audit or reproduce.
 
 ## Tips
 
