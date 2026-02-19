@@ -10,6 +10,14 @@ pip install arcgispro-cli
 arcgispro install
 ```
 
+## What's New in v0.4.0
+
+- Enhanced TUI with map preview support and improved banner rendering
+- Mermaid project structure export (`project-structure.mmd` + markdown wrapper)
+- Best-effort stable IDs for maps/layers/tables to improve snapshot tracking
+- Geoprocessing history export scaffold for richer context artifacts
+- Reliability fixes including Python 3.9 compatibility and improved terminal/add-in robustness
+
 ## How It Works
 
 ProExporter (Pro add-in) creates detailed flat files that explain the state of your ArcGIS Pro project. `arcgispro` CLI tool facilitates frictionless reasoning over the context. Fewer assumptions and annoying follow-up questions. Helps the AI help you.
