@@ -1,3 +1,3 @@
 """ArcGIS Pro CLI - Inspect and manage ArcGIS Pro session exports."""
 
-__version__ = "0.1.2"
+__version__ = "0.4.0"

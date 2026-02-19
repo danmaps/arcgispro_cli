@@ -9,11 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-02-19
+
+### Added
+
+- **CLI:** TUI enhancements including map preview support and improved banner rendering
+- **Add-in:** Mermaid project structure diagram export (`project-structure.mmd` and markdown wrapper)
+- **Add-in:** Geoprocessing history artifact export scaffold
+- **Add-in:** Stable IDs for maps/layers/tables (best effort) for snapshot-to-snapshot tracking
+- **Docs:** Added `CONTRIBUTING.md`, PR template, and test suite plan
+
 ### Changed
 
 - **Add-in:** AGENTS.md now written to project root instead of .arcgispro/ for immediate discoverability
 - **Add-in:** Replaced settings UI with simple `.arcgispro/config.yml` file (easier for agents to edit)
 - **Add-in:** Snapshot now fully replaces prior output by deleting existing `.arcgispro/` and regenerating `AGENTS.md`/`agents.md`
+
+### Fixed
+
+- **CLI:** Restored Python 3.9 compatibility (`Optional` typing usage)
+- **CLI:** Terminal sessions now auto-heal stale ArcGIS Pro scratch workspace state
+- **Add-in:** Ribbon icons now use local assets to avoid missing resource issues
+- **Add-in:** Layer summaries correctly report zero feature counts
 
 ## [0.3.2] - 2026-01-29
 
@@ -121,5 +138,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Map/layout images as PNG
   - Markdown summary for AI consumption
 
-[Unreleased]: https://github.com/danmaps/arcgispro_cli/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/danmaps/arcgispro_cli/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/danmaps/arcgispro_cli/compare/v0.3.2...v0.4.0
+[0.3.2]: https://github.com/danmaps/arcgispro_cli/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/danmaps/arcgispro_cli/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/danmaps/arcgispro_cli/compare/v0.2.1...v0.3.0
+[0.2.1]: https://github.com/danmaps/arcgispro_cli/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/danmaps/arcgispro_cli/compare/v0.1.4...v0.2.0
+[0.1.4]: https://github.com/danmaps/arcgispro_cli/compare/v0.1.3...v0.1.4
+[0.1.3]: https://github.com/danmaps/arcgispro_cli/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/danmaps/arcgispro_cli/compare/v0.1.0...v0.1.2
 [0.1.0]: https://github.com/danmaps/arcgispro_cli/releases/tag/v0.1.0
