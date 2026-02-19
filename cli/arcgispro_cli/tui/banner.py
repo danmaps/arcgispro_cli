@@ -4,36 +4,51 @@ from rich.text import Text
 from textual.widget import Widget
 from textual.widgets import Static
 
-from arcgispro_cli import __version__
+LOGO_LINES = [
+    " █████╗ ██████╗  ██████╗  ██████╗ ██╗███████╗",
+    "██╔══██╗██╔══██╗██╔════╝ ██╔════╝ ██║██╔════╝",
+    "███████║██████╔╝██║      ██║  ███╗██║███████╗",
+    "██╔══██║██╔══██╗██║      ██║   ██║██║╚════██║",
+    "██║  ██║██║  ██║╚██████╗ ╚██████╔╝██║███████║",
+    "╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝╚══════╝",
+]
 
+BLUES = [
+    "#9dd8ff",
+    "#87cefa",
+    "#6fbff6",
+    "#55aef0",
+    "#3f9be8",
+    "#2f88e0",
+]
 
-TAGLINE = "Automate ArcGIS Pro from your terminal"
-
-# Generated with: npx oh-my-logo "ArcGISPro CLI" ocean --filled --letter-spacing 0
-LOGO = """\
- █████╗ ██████╗  ██████╗ ██████╗ ██╗███████╗██████╗ ██████╗  ██████╗     ██████╗██╗     ██╗
-██╔══██╗██╔══██╗██╔════╝██╔════╝ ██║██╔════╝██╔══██╗██╔══██╗██╔═══██╗   ██╔════╝██║     ██║
-███████║██████╔╝██║     ██║  ███╗██║███████╗██████╔╝██████╔╝██║   ██║   ██║     ██║     ██║
-██╔══██║██╔══██╗██║     ██║   ██║██║╚════██║██╔═══╝ ██╔══██╗██║   ██║   ██║     ██║     ██║
-██║  ██║██║  ██║╚██████╗╚██████╔╝██║███████║██║     ██║  ██║╚██████╔╝   ╚██████╗███████╗██║
-╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚═╝╚══════╝╚═╝     ╚═╝  ╚═╝ ╚═════╝     ╚═════╝╚══════╝╚═╝"""
+GRAYS = [
+    "color(250)",
+    "color(248)",
+    "color(245)",
+    "color(243)",
+    "color(240)",
+    "color(238)",
+]
 
 SHADOW_CHARS = set("╔╗╚╝═║")
-BLOCK_COLOR = "#87CEEB"
-SHADOW_COLOR = "#555555"
 
 
 def _colorize_logo() -> Text:
-    """Apply light blue to block chars and dark grey to shadow chars."""
+    """Render ARCGIS logo with blue gradient fills and gray shadow strokes."""
     text = Text()
-    for ch in LOGO:
-        if ch in SHADOW_CHARS:
-            text.append(ch, style=SHADOW_COLOR)
-        elif ch == "\n" or ch == " ":
-            text.append(ch)
-        else:
-            text.append(ch, style=BLOCK_COLOR)
-    text.append(f"\n{TAGLINE}  ·  v{__version__}", style="dim")
+    for row_index, line in enumerate(LOGO_LINES):
+        block_color = BLUES[min(row_index, len(BLUES) - 1)]
+        shadow_color = GRAYS[min(row_index, len(GRAYS) - 1)]
+        for ch in line:
+            if ch in SHADOW_CHARS:
+                text.append(ch, style=shadow_color)
+            elif ch == " ":
+                text.append(ch)
+            else:
+                text.append(ch, style=block_color)
+        if row_index < len(LOGO_LINES) - 1:
+            text.append("\n")
     return text
 
 

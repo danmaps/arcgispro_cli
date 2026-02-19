@@ -24,9 +24,6 @@ arcgispro dump
 # Validate images
 arcgispro images
 
-# Assemble snapshot
-arcgispro snapshot
-
 # Render project diagram
 arcgispro diagram
 

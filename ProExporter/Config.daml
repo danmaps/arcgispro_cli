@@ -25,28 +25,16 @@
               
       <groups>
         <group id="ProExporter_Group1" caption="ArcGIS Pro CLI" appearsOnAddInTab="false">
-          <comboBox refID="ProExporter_MapFilterComboBox" size="middle" />
-          <checkBox refID="ProExporter_ActiveMapOnlyCheckBox" size="middle" />
           <button refID="ProExporter_SnapshotButton" size="large" />
           <button refID="ProExporter_DumpContextButton" size="middle" />
           <button refID="ProExporter_ExportImagesButton" size="middle" />
           <button refID="ProExporter_OpenFolderButton" size="middle" />
           <button refID="ProExporter_OpenTerminalButton" size="middle" />
+          <checkBox refID="ProExporter_ActiveMapOnlyCheckBox" size="middle" />
         </group>
       </groups>
       
       <controls>
-        <comboBox id="ProExporter_MapFilterComboBox"
-                  caption="Maps"
-                  className="MapFilterComboBox"
-                  itemWidth="180"
-                  sizeString="Exclude: Long_Map_Name_For_Filtering"
-                  loadOnClick="true">
-          <tooltip heading="Map Filter">
-            Include/exclude a specific map in exports
-            <disabledText>Open a project first</disabledText>
-          </tooltip>
-        </comboBox>
         <checkBox id="ProExporter_ActiveMapOnlyCheckBox"
                   caption="Active map only"
                   className="ActiveMapOnlyCheckBox"
