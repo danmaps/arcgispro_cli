@@ -43,7 +43,7 @@ namespace ProExporter
         public async Task<ExportResult> RunSnapshotAsync(ExportOptions options = null)
         {
             options ??= ExportOptions.Default;
-            return await RunExportAsync(exportContext: true, exportImages: options.ExportImages, options: options);
+            return await RunExportAsync(exportContext: true, exportImages: options.ExportImages, options: options, cleanSnapshotOutput: true);
         }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace ProExporter
         public async Task<ExportResult> RunContextExportAsync(ExportOptions options = null)
         {
             options ??= ExportOptions.Default;
-            return await RunExportAsync(exportContext: true, exportImages: false, options: options);
+            return await RunExportAsync(exportContext: true, exportImages: false, options: options, cleanSnapshotOutput: false);
         }
 
         /// <summary>
@@ -61,13 +61,13 @@ namespace ProExporter
         public async Task<ExportResult> RunImageExportAsync(ExportOptions options = null)
         {
             options ??= ExportOptions.Default;
-            return await RunExportAsync(exportContext: false, exportImages: true, options: options);
+            return await RunExportAsync(exportContext: false, exportImages: true, options: options, cleanSnapshotOutput: false);
         }
 
         /// <summary>
         /// Core export method with options
         /// </summary>
-        private async Task<ExportResult> RunExportAsync(bool exportContext, bool exportImages, ExportOptions options)
+        private async Task<ExportResult> RunExportAsync(bool exportContext, bool exportImages, ExportOptions options, bool cleanSnapshotOutput)
         {
             var result = new ExportResult();
             var stopwatch = Stopwatch.StartNew();
@@ -97,6 +97,20 @@ namespace ProExporter
                 }
 
                 result.OutputPath = outputFolder;
+
+                if (cleanSnapshotOutput)
+                {
+                    try
+                    {
+                        CleanupSnapshotOutput(outputFolder);
+                    }
+                    catch (Exception ex)
+                    {
+                        result.Success = false;
+                        result.Errors.Add($"Failed to clear previous snapshot output: {ex.Message}");
+                        return result;
+                    }
+                }
 
                 // Create output folder structure
                 Directory.CreateDirectory(outputFolder);
@@ -161,6 +175,33 @@ namespace ProExporter
         public void CancelExport()
         {
             _currentExportCts?.Cancel();
+        }
+
+        /// <summary>
+        /// Remove all previous snapshot output so next snapshot is a full replacement.
+        /// </summary>
+        private static void CleanupSnapshotOutput(string outputFolder)
+        {
+            if (Directory.Exists(outputFolder))
+            {
+                Directory.Delete(outputFolder, recursive: true);
+            }
+
+            var projectRoot = Directory.GetParent(outputFolder)?.FullName;
+            if (string.IsNullOrEmpty(projectRoot))
+                return;
+
+            var agentsUpperPath = Path.Combine(projectRoot, "AGENTS.md");
+            if (File.Exists(agentsUpperPath))
+            {
+                File.Delete(agentsUpperPath);
+            }
+
+            var agentsLowerPath = Path.Combine(projectRoot, "agents.md");
+            if (File.Exists(agentsLowerPath))
+            {
+                File.Delete(agentsLowerPath);
+            }
         }
 
         /// <summary>
