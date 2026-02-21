@@ -4,6 +4,7 @@ from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Header, Footer
 
+from arcgispro_cli.tui.banner import Banner
 from arcgispro_cli.tui.panels.project_tree import ProjectTree
 from arcgispro_cli.tui.panels.detail_panel import DetailPanel
 from arcgispro_cli.tui.panels.log_panel import LogPanel
@@ -27,6 +28,7 @@ class ArcGISProCLIApp(App):
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=False)
+        yield Banner()
         with Horizontal(id="main"):
             yield ProjectTree(id="tree-panel", state=self.state)
             with Vertical(id="right"):
