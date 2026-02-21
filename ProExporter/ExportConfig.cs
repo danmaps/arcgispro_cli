@@ -16,6 +16,7 @@ namespace ProExporter
         public bool ExportImages { get; set; } = true;
         public bool ExportNotebooks { get; set; } = true;
         public bool ExportFields { get; set; } = true;
+        public bool ExportFastSchema { get; set; } = false;
         public int SampleRowCount { get; set; } = 10;
 
         /// <summary>
