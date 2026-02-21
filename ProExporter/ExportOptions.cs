@@ -40,12 +40,15 @@ namespace ProExporter
         /// </summary>
         public static ExportOptions FromConfig(ExportConfig config)
         {
+            var exportFastSchema = config.ExportFastSchema;
+            var exportFields = config.ExportFields || exportFastSchema;
+
             return new ExportOptions
             {
                 ExportImages = config.ExportImages,
                 ExportNotebooks = config.ExportNotebooks,
-                ExportFields = config.ExportFields,
-                ExportFastSchema = config.ExportFastSchema,
+                ExportFields = exportFields,
+                ExportFastSchema = exportFastSchema,
                 SampleRowCount = config.SampleRowCount,
                 ActiveMapOnly = false
             };
