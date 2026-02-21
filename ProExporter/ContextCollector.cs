@@ -258,7 +258,7 @@ namespace ProExporter
                 // Feature layer specific properties
                 if (layer is FeatureLayer featureLayer)
                 {
-                    CollectFeatureLayerInfo(featureLayer, info, exportFields, sampleRowCount, options.ExportFastSchema);
+                    CollectFeatureLayerInfo(featureLayer, info, exportFields, sampleRowCount, false);
                 }
                 // Raster layer
                 else if (layer is RasterLayer rasterLayer)
