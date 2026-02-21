@@ -64,7 +64,7 @@ namespace ProExporter
                     context.Layers.AddRange(layers);
 
                     // Collect standalone tables
-                    var tables = CollectTableInfo(map, options.ExportFields, options.SampleRowCount);
+                    var tables = CollectTableInfo(map, options.ExportFields, options.SampleRowCount, options.ExportFastSchema);
                     context.Tables.AddRange(tables);
                 }
 
@@ -258,12 +258,13 @@ namespace ProExporter
                 // Feature layer specific properties
                 if (layer is FeatureLayer featureLayer)
                 {
-                    CollectFeatureLayerInfo(featureLayer, info, exportFields, sampleRowCount);
+                    CollectFeatureLayerInfo(featureLayer, info, exportFields, sampleRowCount, false);
                 }
                 // Raster layer
                 else if (layer is RasterLayer rasterLayer)
                 {
                     info.DataSourcePath = GetDataSourcePath(rasterLayer);
+                    info.DataSourceKind = NormalizeDataSourceKind(null, info.DataSourcePath, "raster");
                 }
                 // Group layer
                 else if (layer is GroupLayer groupLayer)
@@ -280,7 +281,7 @@ namespace ProExporter
         /// <summary>
         /// Collect feature layer specific information
         /// </summary>
-        private static void CollectFeatureLayerInfo(FeatureLayer featureLayer, LayerInfo info, bool exportFields, int sampleRowCount)
+        private static void CollectFeatureLayerInfo(FeatureLayer featureLayer, LayerInfo info, bool exportFields, int sampleRowCount, bool exportFastSchema)
         {
             info.IsEditable = featureLayer.IsEditable;
             info.DefinitionQuery = featureLayer.DefinitionQuery;
@@ -299,15 +300,19 @@ namespace ProExporter
                         var dataStore = fc.GetDatastore();
                         info.DataSourcePath = GetDataStorePath(dataStore);
                         info.DataSourceType = GetDataStoreType(dataStore);
+                        info.DataSourceKind = NormalizeDataSourceKind(info.DataSourceType, info.DataSourcePath, null);
 
-                        // Feature count (can be slow for large datasets)
-                        try
+                        if (!exportFastSchema)
                         {
-                            info.FeatureCount = fc.GetCount();
-                        }
-                        catch
-                        {
-                            // Count may fail for some data sources
+                            // Feature count (can be slow for large datasets)
+                            try
+                            {
+                                info.FeatureCount = fc.GetCount();
+                            }
+                            catch
+                            {
+                                // Count may fail for some data sources
+                            }
                         }
 
                         // Fields (if enabled)
@@ -318,7 +323,7 @@ namespace ProExporter
                         }
 
                         // Sample data (if enabled)
-                        if (sampleRowCount > 0)
+                        if (!exportFastSchema && sampleRowCount > 0)
                         {
                             try
                             {
@@ -338,14 +343,22 @@ namespace ProExporter
             }
 
             // Selection count
-            try
+            if (!exportFastSchema)
             {
-                var selection = featureLayer.GetSelection();
-                info.SelectionCount = selection?.GetCount() ?? 0;
+                try
+                {
+                    var selection = featureLayer.GetSelection();
+                    info.SelectionCount = selection?.GetCount() ?? 0;
+                }
+                catch
+                {
+                    // Selection may fail
+                }
             }
-            catch
+
+            if (string.IsNullOrWhiteSpace(info.DataSourceKind))
             {
-                // Selection may fail
+                info.DataSourceKind = NormalizeDataSourceKind(info.DataSourceType, info.DataSourcePath, null);
             }
 
             // Renderer info
@@ -418,7 +431,7 @@ namespace ProExporter
         /// <summary>
         /// Collect standalone table information from a map
         /// </summary>
-        private static List<TableInfo> CollectTableInfo(Map map, bool exportFields, int sampleRowCount)
+        private static List<TableInfo> CollectTableInfo(Map map, bool exportFields, int sampleRowCount, bool exportFastSchema)
         {
             var tables = new List<TableInfo>();
             
@@ -441,12 +454,16 @@ namespace ProExporter
                             var dataStore = tbl.GetDatastore();
                             info.DataSourcePath = GetDataStorePath(dataStore);
                             info.DataSourceType = GetDataStoreType(dataStore);
+                            info.DataSourceKind = NormalizeDataSourceKind(info.DataSourceType, info.DataSourcePath, null);
 
-                            try
+                            if (!exportFastSchema)
                             {
-                                info.RowCount = tbl.GetCount();
+                                try
+                                {
+                                    info.RowCount = tbl.GetCount();
+                                }
+                                catch { }
                             }
-                            catch { }
 
                             if (exportFields)
                             {
@@ -455,7 +472,7 @@ namespace ProExporter
                             }
 
                             // Sample data (if enabled)
-                            if (sampleRowCount > 0)
+                            if (!exportFastSchema && sampleRowCount > 0)
                             {
                                 try
                                 {
@@ -470,6 +487,11 @@ namespace ProExporter
                     }
                 }
                 catch { }
+
+                if (string.IsNullOrWhiteSpace(info.DataSourceKind))
+                {
+                    info.DataSourceKind = NormalizeDataSourceKind(info.DataSourceType, info.DataSourcePath, null);
+                }
 
                 tables.Add(info);
             }
@@ -648,6 +670,46 @@ namespace ProExporter
             catch { }
 
             return dataStore.GetType().Name;
+        }
+
+        /// <summary>
+        /// Normalize data source kind for downstream tooling
+        /// </summary>
+        private static string NormalizeDataSourceKind(string dataSourceType, string dataSourcePath, string layerTypeHint)
+        {
+            if (!string.IsNullOrWhiteSpace(layerTypeHint) && layerTypeHint.Equals("raster", StringComparison.OrdinalIgnoreCase))
+            {
+                return "raster";
+            }
+
+            var path = dataSourcePath ?? "";
+            var type = dataSourceType ?? "";
+
+            if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+                path.IndexOf("FeatureServer", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                path.IndexOf("MapServer", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                path.IndexOf("arcgis.com", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return "service";
+            }
+
+            if (path.EndsWith(".shp", StringComparison.OrdinalIgnoreCase))
+            {
+                return "shapefile";
+            }
+
+            if (type.Equals("FileGDB", StringComparison.OrdinalIgnoreCase))
+            {
+                return "file_gdb";
+            }
+
+            if (type.Equals("EnterpriseGDB", StringComparison.OrdinalIgnoreCase))
+            {
+                return "enterprise_gdb";
+            }
+
+            return "unknown";
         }
 
         /// <summary>

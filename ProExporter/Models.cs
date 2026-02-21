@@ -75,6 +75,7 @@ namespace ProExporter
         public string GeometryType { get; set; }  // Point, Polyline, Polygon, null for non-feature
         public string DataSourcePath { get; set; }
         public string DataSourceType { get; set; }  // FileGDB, Shapefile, EnterpriseGDB, etc.
+        public string DataSourceKind { get; set; }  // file_gdb | enterprise_gdb | service | shapefile | raster | unknown
         public bool IsVisible { get; set; }
         public bool IsEditable { get; set; }
         public bool IsBroken { get; set; }
@@ -117,6 +118,7 @@ namespace ProExporter
         public string MapName { get; set; }
         public string DataSourcePath { get; set; }
         public string DataSourceType { get; set; }
+        public string DataSourceKind { get; set; }  // file_gdb | enterprise_gdb | service | shapefile | raster | unknown
         public bool IsBroken { get; set; }
         public string DefinitionQuery { get; set; }
         public long? RowCount { get; set; }

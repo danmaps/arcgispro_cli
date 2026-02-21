@@ -21,6 +21,11 @@ namespace ProExporter
         public bool ExportFields { get; set; } = true;
 
         /// <summary>
+        /// Fast schema mode: export fields only (no counts, no sampling)
+        /// </summary>
+        public bool ExportFastSchema { get; set; } = false;
+
+        /// <summary>
         /// Number of sample rows to export per layer/table (0 = none)
         /// </summary>
         public int SampleRowCount { get; set; } = 10;
@@ -40,6 +45,7 @@ namespace ProExporter
                 ExportImages = config.ExportImages,
                 ExportNotebooks = config.ExportNotebooks,
                 ExportFields = config.ExportFields,
+                ExportFastSchema = config.ExportFastSchema,
                 SampleRowCount = config.SampleRowCount,
                 ActiveMapOnly = false
             };
