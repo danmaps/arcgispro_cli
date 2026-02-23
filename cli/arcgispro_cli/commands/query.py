@@ -441,63 +441,211 @@ def context_cmd(path):
 
 @click.command("status")
 @click.option("--path", "-p", type=click.Path(exists=True), help="Path to search for .arcgispro folder")
-def status_cmd(path):
-    """Show export status and validate files."""
-    from datetime import datetime
-    from ..paths import list_image_files
-    
+@click.option("--strict", is_flag=True, help="Exit with code 1 if problems are detected")
+@click.option("--json", "as_json", is_flag=True, help="Output status as JSON")
+def status_cmd(path, strict, as_json):
+    """Show export status and validate files.
+
+    This is intentionally "doctor-lite": it tries to detect common export problems and
+    prints clear next steps.
+    """
+    import json as json_lib
+    from datetime import datetime, timezone
+    from ..paths import list_image_files, get_context_folder, get_snapshot_folder, get_images_folder
+
     arcgispro_path = require_context(path)
+
+    context_dir = get_context_folder(arcgispro_path)
+    snapshot_dir = get_snapshot_folder(arcgispro_path)
+    images_dir = get_images_folder(arcgispro_path)
+
+    # Load parsed JSON (may be None if missing/invalid)
     context = load_context_files(arcgispro_path)
     images = list_image_files(arcgispro_path)
-    
-    console.print()
-    console.print(f"[bold]Export Status[/bold]")
-    console.print(f"  Location: {arcgispro_path}")
-    
+
+    def json_health(label: str, file_path: Path, parsed):
+        """Return (ok: bool, message: str, info: str)."""
+        if not file_path.exists():
+            return False, "missing", ""
+        if parsed is None:
+            return False, "invalid JSON", ""
+        if isinstance(parsed, list):
+            return True, "ok", f"{len(parsed)} items"
+        if isinstance(parsed, dict):
+            return True, "ok", "valid"
+        return True, "ok", "valid"
+
+    problems = []
+
     # Meta info
     meta = context.get("meta")
+    exported_at_display = "Unknown"
+    exported_at_iso = None
+    export_age_hours = None
+
     if meta:
         exported_at = meta.get("exportedAt", "Unknown")
         if isinstance(exported_at, str) and "T" in exported_at:
             try:
                 dt = datetime.fromisoformat(exported_at.replace("Z", "+00:00"))
-                exported_at = dt.strftime("%Y-%m-%d %H:%M:%S UTC")
+                exported_at_iso = dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+                exported_at_display = dt.strftime("%Y-%m-%d %H:%M:%S UTC")
+                now = datetime.now(timezone.utc)
+                export_age_hours = (now - dt).total_seconds() / 3600
             except ValueError:
-                pass
-        console.print(f"  Exported: {exported_at}")
-    console.print()
-    
-    # File validation
-    console.print("[bold]Files:[/bold]")
-    files = [
-        ("meta.json", context.get("meta")),
-        ("project.json", context.get("project")),
-        ("maps.json", context.get("maps")),
-        ("layers.json", context.get("layers")),
-        ("tables.json", context.get("tables")),
-        ("connections.json", context.get("connections")),
-        ("layouts.json", context.get("layouts")),
-    ]
-    
-    valid = 0
-    for name, data in files:
-        if data is not None:
-            if isinstance(data, list):
-                info = f"{len(data)} items"
-            elif isinstance(data, dict):
-                info = "valid"
-            else:
-                info = "valid"
-            console.print(f"  [green]✓[/green] {name} ({info})")
-            valid += 1
+                exported_at_display = str(exported_at)
         else:
-            console.print(f"  [red]✗[/red] {name} (missing)")
-    
+            exported_at_display = str(exported_at)
+    else:
+        problems.append("meta.json missing or unreadable (export may not have completed)")
+
+    # Structure checks
+    structure = {
+        "contextDirExists": context_dir.exists() and context_dir.is_dir(),
+        "snapshotDirExists": snapshot_dir.exists() and snapshot_dir.is_dir(),
+        "imagesDirExists": images_dir.exists() and images_dir.is_dir(),
+        "contextMdExists": (snapshot_dir / "context.md").exists(),
+    }
+
+    if not structure["contextDirExists"]:
+        problems.append("context/ folder missing")
+    if not structure["snapshotDirExists"]:
+        problems.append("snapshot/ folder missing")
+    if not structure["imagesDirExists"]:
+        problems.append("images/ folder missing")
+    if not structure["contextMdExists"]:
+        problems.append("snapshot/context.md missing (run Snapshot again if you need the markdown context)")
+
+    # File validation (existence + JSON parse)
+    files = [
+        ("meta.json", arcgispro_path / "meta.json", context.get("meta")),
+        ("project.json", context_dir / "project.json", context.get("project")),
+        ("maps.json", context_dir / "maps.json", context.get("maps")),
+        ("layers.json", context_dir / "layers.json", context.get("layers")),
+        ("tables.json", context_dir / "tables.json", context.get("tables")),
+        ("connections.json", context_dir / "connections.json", context.get("connections")),
+        ("layouts.json", context_dir / "layouts.json", context.get("layouts")),
+        ("geoprocessing.json", context_dir / "geoprocessing.json", context.get("geoprocessing")),
+    ]
+
+    file_results = []
+    ok_count = 0
+    for name, p, parsed in files:
+        ok, state, info = json_health(name, p, parsed)
+        file_results.append({
+            "name": name,
+            "path": str(p),
+            "ok": ok,
+            "state": state,
+            "info": info,
+        })
+        if ok:
+            ok_count += 1
+        else:
+            problems.append(f"{name} is {state}")
+
+    # Images
+    if structure["imagesDirExists"] and len(images) == 0:
+        problems.append("no images exported")
+
+    summary = {
+        "location": str(arcgispro_path),
+        "contextDir": str(context_dir),
+        "snapshotDir": str(snapshot_dir),
+        "imagesDir": str(images_dir),
+        "exportedAt": exported_at_iso,
+        "exportedAtDisplay": exported_at_display,
+        "exportAgeHours": export_age_hours,
+        "structure": structure,
+        "files": file_results,
+        "images": {
+            "count": len(images),
+            "names": [p.name for p in images],
+        },
+        "okFiles": ok_count,
+        "totalFiles": len(files),
+        "problems": problems,
+        "ok": len(problems) == 0,
+    }
+
+    if as_json:
+        console.print(json_lib.dumps(summary, indent=2))
+        if strict and problems:
+            raise SystemExit(1)
+        return
+
     console.print()
+    console.print("[bold]Export Status[/bold]")
+    console.print(f"  Location: {arcgispro_path}")
+    console.print(f"  Context dir: {context_dir}")
+    console.print(f"  Snapshot dir: {snapshot_dir}")
+    console.print(f"  Images dir: {images_dir}")
+
+    if meta and export_age_hours is not None:
+        if export_age_hours > 24:
+            console.print(f"  Exported: {exported_at_display}  [dim](~{export_age_hours/24:.1f} days ago)[/dim]")
+        else:
+            console.print(f"  Exported: {exported_at_display}  [dim](~{export_age_hours:.1f} hours ago)[/dim]")
+    else:
+        if meta:
+            console.print(f"  Exported: {exported_at_display}")
+        else:
+            console.print("  Exported: [yellow]Unknown (meta.json missing/unreadable)[/yellow]")
+
+    console.print()
+
+    console.print("[bold]Structure:[/bold]")
+    for label, ok in [
+        ("context/", structure["contextDirExists"]),
+        ("snapshot/", structure["snapshotDirExists"]),
+        ("images/", structure["imagesDirExists"]),
+    ]:
+        if ok:
+            console.print(f"  [green]✓[/green] {label}")
+        else:
+            console.print(f"  [red]✗[/red] {label} (missing)")
+
+    if structure["contextMdExists"]:
+        console.print("  [green]✓[/green] snapshot/context.md")
+    else:
+        console.print("  [yellow]•[/yellow] snapshot/context.md (missing)")
+
+    console.print()
+
+    console.print("[bold]Context files:[/bold]")
+    for r in file_results:
+        if r["ok"]:
+            suffix = f" ({r['info']})" if r["info"] else ""
+            console.print(f"  [green]✓[/green] {r['name']}{suffix}")
+        else:
+            console.print(f"  [red]✗[/red] {r['name']} ({r['state']})")
+
+    console.print()
+
     console.print(f"[bold]Images:[/bold] {len(images)}")
-    for img in images:
-        console.print(f"  • {img.name}")
-    
+    if structure["imagesDirExists"] and len(images) == 0:
+        console.print("  [yellow]•[/yellow] No PNGs found (did the exporter capture map/layout images?)")
+    else:
+        for img in images[:20]:
+            console.print(f"  • {img.name}")
+        if len(images) > 20:
+            console.print(f"  [dim]…and {len(images) - 20} more[/dim]")
+
     console.print()
-    console.print(f"[bold]Summary:[/bold] {valid}/7 context files, {len(images)} images")
+
+    console.print(f"[bold]Summary:[/bold] {ok_count}/{len(files)} JSON files OK, {len(images)} images")
+
+    if problems:
+        console.print()
+        console.print(f"[bold red]Problems detected:[/bold red] {len(problems)}")
+        for p in problems:
+            console.print(f"  - {p}")
+        console.print()
+        console.print("[bold]Suggested fix:[/bold]")
+        console.print("  Re-run Snapshot export from ArcGIS Pro (Add-In) to regenerate .arcgispro/")
+        console.print("  Then re-run: arcgispro status")
+
+        if strict:
+            raise SystemExit(1)
+
     console.print()

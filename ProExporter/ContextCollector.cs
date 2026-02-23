@@ -60,7 +60,7 @@ namespace ProExporter
                     context.Maps.Add(mapInfo);
 
                     // Collect layers
-                    var layers = CollectLayerInfo(map, options.ExportFields, options.SampleRowCount);
+                    var layers = CollectLayerInfo(map, options.ExportFields, options.SampleRowCount, options.ExportFastSchema);
                     context.Layers.AddRange(layers);
 
                     // Collect standalone tables
@@ -233,7 +233,7 @@ namespace ProExporter
         /// <summary>
         /// Collect layer information from a map
         /// </summary>
-        private static List<LayerInfo> CollectLayerInfo(Map map, bool exportFields, int sampleRowCount)
+        private static List<LayerInfo> CollectLayerInfo(Map map, bool exportFields, int sampleRowCount, bool exportFastSchema)
         {
             var layers = new List<LayerInfo>();
             
@@ -258,7 +258,7 @@ namespace ProExporter
                 // Feature layer specific properties
                 if (layer is FeatureLayer featureLayer)
                 {
-                    CollectFeatureLayerInfo(featureLayer, info, exportFields, sampleRowCount, false);
+                    CollectFeatureLayerInfo(featureLayer, info, exportFields, sampleRowCount, exportFastSchema);
                 }
                 // Raster layer
                 else if (layer is RasterLayer rasterLayer)
@@ -319,7 +319,7 @@ namespace ProExporter
                         if (exportFields)
                         {
                             var fcDef = fc.GetDefinition();
-                            info.Fields = CollectFieldInfo(fcDef);
+                            info.Fields = exportFastSchema ? CollectFieldInfoFast(fcDef) : CollectFieldInfo(fcDef);
                         }
 
                         // Sample data (if enabled)
@@ -429,6 +429,68 @@ namespace ProExporter
         }
 
         /// <summary>
+        /// Collect field information in "fast schema" mode (names/types only, no extras)
+        /// </summary>
+        private static List<FieldInfo> CollectFieldInfoFast(FeatureClassDefinition fcDef)
+        {
+            var fields = new List<FieldInfo>();
+
+            foreach (var field in fcDef.GetFields())
+            {
+                var info = new FieldInfo
+                {
+                    Name = field.Name,
+                    FieldType = field.FieldType.ToString(),
+                    Length = field.Length,
+                    IsNullable = field.IsNullable,
+                };
+
+                try
+                {
+                    var domain = field.GetDomain();
+                    if (domain != null)
+                        info.DomainName = domain.GetName();
+                }
+                catch { }
+
+                fields.Add(info);
+            }
+
+            return fields;
+        }
+
+        /// <summary>
+        /// Collect table field information in "fast schema" mode (names/types only, no extras)
+        /// </summary>
+        private static List<FieldInfo> CollectTableFieldInfoFast(TableDefinition tblDef)
+        {
+            var fields = new List<FieldInfo>();
+
+            foreach (var field in tblDef.GetFields())
+            {
+                var info = new FieldInfo
+                {
+                    Name = field.Name,
+                    FieldType = field.FieldType.ToString(),
+                    Length = field.Length,
+                    IsNullable = field.IsNullable,
+                };
+
+                try
+                {
+                    var domain = field.GetDomain();
+                    if (domain != null)
+                        info.DomainName = domain.GetName();
+                }
+                catch { }
+
+                fields.Add(info);
+            }
+
+            return fields;
+        }
+
+        /// <summary>
         /// Collect standalone table information from a map
         /// </summary>
         private static List<TableInfo> CollectTableInfo(Map map, bool exportFields, int sampleRowCount, bool exportFastSchema)
@@ -468,7 +530,7 @@ namespace ProExporter
                             if (exportFields)
                             {
                                 var tblDef = tbl.GetDefinition();
-                                info.Fields = CollectTableFieldInfo(tblDef);
+                                info.Fields = exportFastSchema ? CollectTableFieldInfoFast(tblDef) : CollectTableFieldInfo(tblDef);
                             }
 
                             // Sample data (if enabled)
@@ -508,7 +570,7 @@ namespace ProExporter
             
             foreach (var field in tblDef.GetFields())
             {
-                fields.Add(new FieldInfo
+                var info = new FieldInfo
                 {
                     Name = field.Name,
                     Alias = field.AliasName,
@@ -516,7 +578,17 @@ namespace ProExporter
                     Length = field.Length,
                     IsNullable = field.IsNullable,
                     IsEditable = field.IsEditable
-                });
+                };
+
+                try
+                {
+                    var domain = field.GetDomain();
+                    if (domain != null)
+                        info.DomainName = domain.GetName();
+                }
+                catch { }
+
+                fields.Add(info);
             }
 
             return fields;
