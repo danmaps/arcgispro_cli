@@ -10,6 +10,19 @@ pip install arcgispro-cli
 arcgispro install
 ```
 
+## First 5 Minutes (Quickstart)
+
+1. Open an ArcGIS Pro project (.aprx)
+2. Click **Snapshot** in the **CLI** ribbon tab
+3. In a terminal, run:
+   ```bash
+   arcgispro status
+   arcgispro layers
+   arcgispro layer "Parcels"
+   ```
+
+More: [docs/quickstart.md](docs/quickstart.md)
+
 ## What's New in v0.4.0
 
 - Enhanced TUI with map preview support and improved banner rendering
