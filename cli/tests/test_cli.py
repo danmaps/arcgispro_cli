@@ -51,7 +51,74 @@ def test_status_no_folder():
 def test_addin_bundled():
     """Test that the add-in file is bundled."""
     from arcgispro_cli.commands.install import get_addin_path
-    
+
     addin_path = get_addin_path()
     assert addin_path.exists(), f"Add-in not found at {addin_path}"
     assert addin_path.suffix == ".addin"
+
+
+def _write_json(path, obj):
+    import json
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(obj, indent=2), encoding="utf-8")
+
+
+def test_layers_active_map_filter():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        # minimal exported context
+        _write_json(
+            __import__("pathlib").Path(".arcgispro/context/maps.json"),
+            [
+                {"name": "Map A", "isActiveMap": True},
+                {"name": "Map B", "isActiveMap": False},
+            ],
+        )
+        _write_json(
+            __import__("pathlib").Path(".arcgispro/context/layers.json"),
+            [
+                {"name": "L1", "mapName": "Map A", "isVisible": True},
+                {"name": "L2", "mapName": "Map B", "isVisible": True},
+            ],
+        )
+
+        result = runner.invoke(main, ["layers", "--active"])
+        assert result.exit_code == 0
+        assert "L1" in result.output
+        assert "L2" not in result.output
+
+
+def test_tables_active_map_filter_json():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        _write_json(
+            __import__("pathlib").Path(".arcgispro/context/maps.json"),
+            [
+                {"name": "Map A", "isActiveMap": True},
+                {"name": "Map B", "isActiveMap": False},
+            ],
+        )
+        _write_json(
+            __import__("pathlib").Path(".arcgispro/context/tables.json"),
+            [
+                {"name": "T1", "mapName": "Map A"},
+                {"name": "T2", "mapName": "Map B"},
+            ],
+        )
+
+        result = runner.invoke(main, ["tables", "--active", "--json"])
+        assert result.exit_code == 0
+        assert "T1" in result.output
+        assert "T2" not in result.output
+
+
+def test_layers_active_map_conflicts_with_map():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        _write_json(__import__("pathlib").Path(".arcgispro/context/maps.json"), [{"name": "Map A", "isActiveMap": True}])
+        _write_json(__import__("pathlib").Path(".arcgispro/context/layers.json"), [])
+
+        result = runner.invoke(main, ["layers", "--active", "--map", "Map A"])
+        assert result.exit_code == 1
+        assert "either --map or --active" in result.output
