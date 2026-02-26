@@ -232,7 +232,16 @@ def layer_cmd(name, path, as_json):
     
     console.print()
     console.print(Panel.fit(f"[bold]{layer.get('name', 'Unknown')}[/bold]", title="Layer"))
-    console.print(f"  Map: {layer.get('mapName', '-')}")
+    map_name = layer.get("mapName", "-")
+    console.print(f"  Map: {map_name}")
+
+    # If map metadata is available, show whether this is the active map
+    maps = context.get("maps") or []
+    if map_name and maps:
+        m = next((mm for mm in maps if (mm.get("name") or "").lower() == str(map_name).lower()), None)
+        if m and m.get("isActiveMap") is not None:
+            console.print(f"  Active map: {'Yes' if m.get('isActiveMap') else 'No'}")
+
     console.print(f"  Type: {layer.get('layerType', '-')}")
     console.print(f"  Geometry: {layer.get('geometryType', '-') or '-'}")
     console.print(f"  Visible: {'Yes' if layer.get('isVisible') else 'No'}")
