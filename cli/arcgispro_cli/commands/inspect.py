@@ -27,7 +27,7 @@ MAX_HINTS = 3
 
 @click.command("inspect")
 @click.option("--path", "-p", type=click.Path(exists=True), help="Path to search for .arcgispro folder")
-@click.option("--no-suggestions", is_flag=True, help="Hide the paid agent hint block")
+@click.option("--no-suggestions", is_flag=True, help="Hide the next-steps hint block")
 def inspect_cmd(path, no_suggestions):
     """Print a human-readable summary of the exported context.
     
@@ -164,11 +164,8 @@ def inspect_cmd(path, no_suggestions):
         suggestions = _collect_next_steps(context)
         if suggestions:
             console.print()
-            # Add gateway reference for agents
-            gateway_info = "[dim]Access via: https://api.x402layer.cc/e/esri-smells[/dim]"
-            suggestions_with_gateway = suggestions + ["", gateway_info]
             console.print(Panel.fit(
-                "\n".join(suggestions_with_gateway),
+                "\n".join(suggestions),
                 title="Next steps",
                 border_style="magenta",
                 subtitle="Use --no-suggestions or ARCGISPRO_CLI_NO_SUGGESTIONS=1 to hide these hints"
@@ -192,13 +189,13 @@ def _collect_next_steps(context: Dict[str, Any]) -> List[str]:
     hints = []
 
     if _has_broken_sources(context):
-        hints.append("Tip: run the 'preflight' advisor on this snapshot to catch brittle data sources before scripting.")
+        hints.append("Tip: broken sources detected. Run `arcgispro layers --broken` and fix paths before scripting.")
     if _has_mixed_spatial_references(context):
-        hints.append("Tip: let the 'approach' advisor verify mixed spatial references across maps before automation.")
+        hints.append("Tip: mixed spatial references across maps. Double-check projections before automation.")
     if _has_service_layers(context):
-        hints.append("Tip: service layers detected—preflight can surface endpoint resilience and credential hints.")
+        hints.append("Tip: service layers detected. Expect auth/latency flakiness; consider local copies for repeatable runs.")
     if _has_complex_relations(context):
-        hints.append("Tip: the approach advisor excels at joins and relates; run it to ensure relationships stay reliable.")
+        hints.append("Tip: multiple joins/relates detected. Sanity check relationship keys before automating edits.")
 
     return hints[:MAX_HINTS]
 
