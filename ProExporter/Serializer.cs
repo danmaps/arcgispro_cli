@@ -565,13 +565,14 @@ Edit `.arcgispro/config.yml` to control exports:
 
 If you generate **analysis or automation artifacts** for a specific request/task (scripts, notebooks, conclusions, data transforms), write a small checkpoint note **once per task** and commit it alongside the work.
 
-- Filename: `checkpoint_YYYYMMDDTHHMMSSZ.md` (UTC, filesystem-safe)
+- Filename: `checkpoint_{task_slug}_YYYYMMDDTHHMMSSZ.md` (UTC, filesystem-safe)
+- Example: `checkpoint_add_trans_segments_20240315T142500Z.md`
 - Location: project root (same folder as this `AGENTS.md`)
 
 Template:
 
 ```md
-# Checkpoint (YYYY-MM-DDTHH:MM:SSZ)
+# Checkpoint: {Task Name} (YYYY-MM-DDTHH:MM:SSZ)
 
 ## Intent
 What question are we answering?
