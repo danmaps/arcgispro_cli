@@ -32,7 +32,7 @@ from rich.console import Console
 
 from . import __version__
 from .commands import clean, open_project, install, query, launch, notebooks, tui, diagram
-from .tui.banner import _colorize_logo
+from .logo import colorize_logo
 
 # Ensure Unicode output on Windows
 if sys.stdout.encoding != "utf-8":
@@ -62,7 +62,7 @@ def main(ctx):
     """
     ctx.ensure_object(dict)
     if ctx.invoked_subcommand is None:
-        console.print(_colorize_logo())
+        console.print(colorize_logo())
         console.print()
         console.print(ctx.get_help())
 
