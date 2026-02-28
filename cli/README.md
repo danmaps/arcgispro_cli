@@ -13,26 +13,28 @@ pip install -e .
 
 ```bash
 # View help
-arcgispro --help
+arcgis --help
 
 # Inspect exported context
-arcgispro inspect
+arcgis inspect
 
 # Validate JSON exports
-arcgispro dump
+arcgis dump
 
 # Validate images
-arcgispro images
+arcgis images
 
 # Render project diagram
-arcgispro diagram
+arcgis diagram
 
 # Clean up exports
-arcgispro clean --all
+arcgis clean --all
 
 # Select active project
-arcgispro open
+arcgis open
 ```
+
+(Backwards compatible aliases: `arcgispro`, `agp`.)
 
 ## Using arcpy with Terminal Sessions
 
@@ -65,7 +67,7 @@ ERROR Directory does not exist or cannot be accessed: C:\Users\...\Temp\ArcGISPr
 ## Workflow
 
 1. **In ArcGIS Pro:** Click "Snapshot" button in the **CLI** ribbon tab
-2. **In terminal:** Run `arcgispro inspect` to see what was exported
+2. **In terminal:** Run `arcgis inspect` to see what was exported
 3. **Use context:** Read JSON files or markdown summary for AI analysis
 
 ## Folder Structure

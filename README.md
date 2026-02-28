@@ -7,7 +7,7 @@ Give AI agents eyes into ArcGIS Pro.
 
 ```bash
 pip install arcgispro-cli
-arcgispro install
+arcgis install
 ```
 
 ## First 5 Minutes (Quickstart)
@@ -16,9 +16,9 @@ arcgispro install
 2. Click **Snapshot** in the **CLI** ribbon tab
 3. In a terminal, run:
    ```bash
-   arcgispro status
-   arcgispro layers
-   arcgispro layer "Parcels"
+   arcgis status
+   arcgis layers
+   arcgis layer "Parcels"
    ```
 
 More: [docs/quickstart.md](docs/quickstart.md)
@@ -33,15 +33,17 @@ More: [docs/quickstart.md](docs/quickstart.md)
 
 ## How It Works
 
-ProExporter (Pro add-in) creates detailed flat files that explain the state of your ArcGIS Pro project. `arcgispro` CLI tool facilitates frictionless reasoning over the context. Fewer assumptions and annoying follow-up questions. Helps the AI help you.
+ProExporter (Pro add-in) creates detailed flat files that explain the state of your ArcGIS Pro project. The `arcgis` CLI tool facilitates frictionless reasoning over the context. Fewer assumptions and annoying follow-up questions. Helps the AI help you.
+
+(Backwards compatible aliases: `arcgispro`, `agp`.)
 
 1. Open a project in ArcGIS Pro
 2. Click **Snapshot** in the **CLI** ribbon tab
 3. Ask questions:
    ```bash
-   arcgispro layers              # What layers do I have?
-   arcgispro layer "Parcels"     # Tell me about this layer
-   arcgispro fields "Parcels"    # What fields are in it?
+   arcgis layers              # What layers do I have?
+   arcgis layer "Parcels"     # Tell me about this layer
+   arcgis fields "Parcels"    # What fields are in it?
    ```
 
 ## CLI Commands
@@ -50,29 +52,29 @@ ProExporter (Pro add-in) creates detailed flat files that explain the state of y
 
 | Command | Description |
 |---------|-------------|
-| `arcgispro install` | Install the ProExporter add-in |
-| `arcgispro uninstall` | Show uninstall instructions |
-| `arcgispro launch` | Launch ArcGIS Pro (opens .aprx in current dir if found) |
-| `arcgispro status` | Show export status and validate files |
-| `arcgispro clean` | Remove generated files |
-| `arcgispro open` | Open export folder |
+| `arcgis install` | Install the ProExporter add-in |
+| `arcgis uninstall` | Show uninstall instructions |
+| `arcgis launch` | Launch ArcGIS Pro (opens .aprx in current dir if found) |
+| `arcgis status` | Show export status and validate files |
+| `arcgis clean` | Remove generated files |
+| `arcgis open` | Open export folder |
 
 ### Query
 
 | Command | Description |
 |---------|-------------|
-| `arcgispro project` | Show project info |
-| `arcgispro maps` | List all maps |
-| `arcgispro map [name]` | Map details |
-| `arcgispro layers` | List all layers |
-| `arcgispro layers --broken` | Just the broken ones |
-| `arcgispro layer <name>` | Layer details + fields |
-| `arcgispro fields <name>` | Just the fields |
-| `arcgispro tables` | Standalone tables |
-| `arcgispro connections` | Data connections |
-| `arcgispro notebooks` | Jupyter notebooks in project |
-| `arcgispro context` | Full markdown dump |
-| `arcgispro diagram` | Render Mermaid diagram of project structure |
+| `arcgis project` | Show project info |
+| `arcgis maps` | List all maps |
+| `arcgis map [name]` | Map details |
+| `arcgis layers` | List all layers |
+| `arcgis layers --broken` | Just the broken ones |
+| `arcgis layer <name>` | Layer details + fields |
+| `arcgis fields <name>` | Just the fields |
+| `arcgis tables` | Standalone tables |
+| `arcgis connections` | Data connections |
+| `arcgis notebooks` | Jupyter notebooks in project |
+| `arcgis context` | Full markdown dump |
+| `arcgis diagram` | Render Mermaid diagram of project structure |
 
 Add `--json` to any query command for machine-readable output.
 
@@ -81,7 +83,8 @@ Add `--json` to any query command for machine-readable output.
 **`arcgispro` launches ArcGIS Pro instead of the CLI?**
 
 This happens if `C:\Program Files\ArcGIS\Pro\bin` is on your PATH. Options:
-- Use `agp` instead (alias): `agp layers`, `agp launch`
+- Prefer `arcgis` (new default): `arcgis layers`, `arcgis launch`
+- Use `agp` (alias): `agp layers`, `agp launch`
 - Or fix PATH order: ensure Python Scripts comes before ArcGIS Pro bin
 
 ## Requirements
@@ -176,16 +179,16 @@ claude   # or: copilot, gemini
 
 ```
 What layers are in this project?
-> AI runs: arcgispro layers
+> AI runs: arcgis layers
 
 What fields are in the Parcels layer?
-> AI runs: arcgispro fields "Parcels"
+> AI runs: arcgis fields "Parcels"
 
 Which layers have broken data sources?
-> AI runs: arcgispro layers --broken
+> AI runs: arcgis layers --broken
 
 Give me the full project context
-> AI runs: arcgispro context
+> AI runs: arcgis context
 
 Look at the map screenshot and describe what you see
 > AI reads: .arcgispro/images/map_*.png
@@ -196,14 +199,14 @@ Look at the map screenshot and describe what you see
 1. **Click Snapshot in Pro before starting your AI session** - ensures context is fresh
 
 2. **Ask naturally** - the CLI commands map to common questions:
-   - "What layers do I have?" → `arcgispro layers`
-   - "Tell me about the Parcels layer" → `arcgispro layer Parcels`
-   - "What's the schema?" → `arcgispro fields Parcels`
+   - "What layers do I have?" → `arcgis layers`
+   - "Tell me about the Parcels layer" → `arcgis layer Parcels`
+   - "What's the schema?" → `arcgis fields Parcels`
 
 3. **Use `--json` for programmatic access** - AI can parse structured output:
    ```bash
-   arcgispro layers --json
-   arcgispro layer "Parcels" --json
+   arcgis layers --json
+   arcgis layer "Parcels" --json
    ```
 
 4. **Check images for visual context** - map screenshots help AI understand spatial data
