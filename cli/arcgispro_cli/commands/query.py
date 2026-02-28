@@ -273,7 +273,7 @@ def layer_cmd(name, path, as_json):
     
     if layer.get("featureCount") is not None:
         console.print(f"  Features: {layer.get('featureCount'):,}")
-    if layer.get("selectionCount"):
+    if layer.get("selectionCount") is not None:
         console.print(f"  Selected: {layer.get('selectionCount'):,}")
     
     if layer.get("dataSourcePath"):
@@ -406,7 +406,8 @@ def tables_cmd(path, as_json):
     table.add_column("Source Type")
     
     for t in tables:
-        rows = f"{t.get('rowCount', '-'):,}" if t.get('rowCount') else "-"
+        row_count = t.get("rowCount")
+        rows = f"{row_count:,}" if row_count is not None else "-"
         table.add_row(
             t.get("name", "Unknown"),
             t.get("mapName", "-"),
