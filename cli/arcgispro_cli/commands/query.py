@@ -139,9 +139,10 @@ def map_cmd(name, path, as_json):
 @click.command("layers")
 @click.option("--path", "-p", type=click.Path(exists=True), help="Path to search for .arcgispro folder")
 @click.option("--map", "-m", "map_name", help="Filter by map name")
+@click.option("--active", "active_map", is_flag=True, help="Only layers in the active map")
 @click.option("--broken", is_flag=True, help="Show only broken layers")
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
-def layers_cmd(path, map_name, broken, as_json):
+def layers_cmd(path, map_name, active_map, broken, as_json):
     """List all layers."""
     import json as json_lib
     
@@ -150,8 +151,21 @@ def layers_cmd(path, map_name, broken, as_json):
     layers = context.get("layers") or []
     
     # Apply filters
+    if map_name and active_map:
+        console.print("[red]✗[/red] Use either --map or --active (not both)")
+        raise SystemExit(1)
+
+    if active_map:
+        maps = context.get("maps") or []
+        active = next((m for m in maps if m.get("isActiveMap")), maps[0] if maps else None)
+        if not active:
+            console.print("[yellow]No maps found[/yellow]")
+            return
+        map_name = active.get("name")
+
     if map_name:
-        layers = [l for l in layers if l.get("mapName", "").lower() == map_name.lower()]
+        layers = [l for l in layers if l.get("mapName", "").lower() == str(map_name).lower()]
+
     if broken:
         layers = [l for l in layers if l.get("isBroken")]
     
@@ -381,19 +395,37 @@ def fields_cmd(layer_name, path, as_json):
 
 @click.command("tables")
 @click.option("--path", "-p", type=click.Path(exists=True), help="Path to search for .arcgispro folder")
+@click.option("--map", "-m", "map_name", help="Filter by map name")
+@click.option("--active", "active_map", is_flag=True, help="Only tables in the active map")
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
-def tables_cmd(path, as_json):
+def tables_cmd(path, map_name, active_map, as_json):
     """List standalone tables."""
     import json as json_lib
     
     arcgispro_path = require_context(path)
     context = load_context_files(arcgispro_path)
     tables = context.get("tables") or []
-    
+
+    # Apply filters
+    if map_name and active_map:
+        console.print("[red]✗[/red] Use either --map or --active (not both)")
+        raise SystemExit(1)
+
+    if active_map:
+        maps = context.get("maps") or []
+        active = next((m for m in maps if m.get("isActiveMap")), maps[0] if maps else None)
+        if not active:
+            console.print("[yellow]No maps found[/yellow]")
+            return
+        map_name = active.get("name")
+
+    if map_name:
+        tables = [t for t in tables if t.get("mapName", "").lower() == str(map_name).lower()]
+
     if as_json:
         console.print(json_lib.dumps(tables, indent=2))
         return
-    
+
     if not tables:
         console.print("[yellow]No standalone tables found[/yellow]")
         return

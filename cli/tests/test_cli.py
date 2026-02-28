@@ -65,6 +65,71 @@ def _write_json(path, obj):
     path.write_text(json.dumps(obj, indent=2), encoding="utf-8")
 
 
+def test_layers_active_map_filter():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        from pathlib import Path
+
+        _write_json(
+            Path(".arcgispro/context/maps.json"),
+            [
+                {"name": "Map A", "isActiveMap": True},
+                {"name": "Map B", "isActiveMap": False},
+            ],
+        )
+        _write_json(
+            Path(".arcgispro/context/layers.json"),
+            [
+                {"name": "L1", "mapName": "Map A", "isVisible": True},
+                {"name": "L2", "mapName": "Map B", "isVisible": True},
+            ],
+        )
+
+        result = runner.invoke(main, ["layers", "--active"])
+        assert result.exit_code == 0
+        assert "L1" in result.output
+        assert "L2" not in result.output
+
+
+def test_tables_active_map_filter_json():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        from pathlib import Path
+
+        _write_json(
+            Path(".arcgispro/context/maps.json"),
+            [
+                {"name": "Map A", "isActiveMap": True},
+                {"name": "Map B", "isActiveMap": False},
+            ],
+        )
+        _write_json(
+            Path(".arcgispro/context/tables.json"),
+            [
+                {"name": "T1", "mapName": "Map A"},
+                {"name": "T2", "mapName": "Map B"},
+            ],
+        )
+
+        result = runner.invoke(main, ["tables", "--active", "--json"])
+        assert result.exit_code == 0
+        assert "T1" in result.output
+        assert "T2" not in result.output
+
+
+def test_layers_active_map_conflicts_with_map():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        from pathlib import Path
+
+        _write_json(Path(".arcgispro/context/maps.json"), [{"name": "Map A", "isActiveMap": True}])
+        _write_json(Path(".arcgispro/context/layers.json"), [])
+
+        result = runner.invoke(main, ["layers", "--active", "--map", "Map A"])
+        assert result.exit_code == 1
+        assert "either --map or --active" in result.output
+
+
 def test_layer_shows_active_map_flag():
     runner = CliRunner()
     with runner.isolated_filesystem():
