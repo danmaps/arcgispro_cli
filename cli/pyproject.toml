@@ -27,10 +27,15 @@ dependencies = [
     "click>=8.0",
     "pillow>=10.0.0",
     "rich>=13.0",
-    "textual>=0.56",
 ]
 
 [project.optional-dependencies]
+# The Textual UI is optional so `pip install arcgispro-cli` stays lightweight
+# and avoids pulling in heavy TUI deps unless you want them.
+tui = [
+    "textual>=0.56",
+]
+
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",

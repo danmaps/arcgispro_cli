@@ -22,3 +22,7 @@ Thumbs.db
 
 # Local notes (not for repo)
 .marketing.md
+
+# Local scratch
+/tmp/
+/cli/tmp/
