@@ -11,7 +11,8 @@ def test_version():
     runner = CliRunner()
     result = runner.invoke(main, ["--version"])
     assert result.exit_code == 0
-    assert "arcgispro" in result.output.lower()
+    # The preferred entrypoint is now `arcgis` (with aliases `arcgispro`, `agp`).
+    assert "arcgis" in result.output.lower()
 
 
 def test_help():

@@ -208,40 +208,61 @@ def layer_cmd(name, path, as_json):
     
     # Find the layer (case-insensitive partial match)
     matches = [l for l in layers if name.lower() in l.get("name", "").lower()]
-    
+
     if not matches:
         console.print(f"[red]Layer '{name}' not found[/red]")
         raise SystemExit(1)
-    
-    if len(matches) > 1:
-        exact = [l for l in matches if l.get("name", "").lower() == name.lower()]
-        if exact:
-            matches = exact
-        else:
-            console.print(f"[yellow]Multiple layers match '{name}':[/yellow]")
-            for l in matches:
-                console.print(f"  • {l.get('name')} ({l.get('mapName')})")
-            console.print("Be more specific.")
-            raise SystemExit(1)
-    
+
+    # Prefer exact name matches when possible
+    exact = [l for l in matches if l.get("name", "").lower() == name.lower()]
+    if exact:
+        matches = exact
+
+    # If still ambiguous (multiple distinct layer names), force the user to disambiguate.
+    distinct_names = sorted({(l.get("name") or "").lower() for l in matches if l.get("name")})
+    if len(distinct_names) > 1:
+        console.print(f"[yellow]Multiple layers match '{name}':[/yellow]")
+        for l in matches:
+            console.print(f"  • {l.get('name')} ({l.get('mapName')})")
+        console.print("Be more specific.")
+        raise SystemExit(1)
+
+    # Same layer name can appear in multiple maps. Treat those as one logical layer.
     layer = matches[0]
-    
+    map_names = [m.get("mapName") for m in matches if m.get("mapName")]
+    # Preserve order, de-dupe
+    seen = set()
+    map_names = [m for m in map_names if not (m in seen or seen.add(m))]
+
     if as_json:
+        # Keep JSON output backward compatible (single layer object)
         console.print(json_lib.dumps(layer, indent=2))
         return
-    
+
     console.print()
     console.print(Panel.fit(f"[bold]{layer.get('name', 'Unknown')}[/bold]", title="Layer"))
-    map_name = layer.get("mapName", "-")
-    console.print(f"  Map: {map_name}")
+    # Map membership (a layer can appear in multiple maps)
+    if map_names:
+        if len(map_names) == 1:
+            console.print(f"  Map: {map_names[0]}")
+        else:
+            console.print(f"  Maps: {', '.join(map_names)}")
+    else:
+        console.print("  Map: -")
 
-    # If map metadata is available, show whether this is the active map
+    # If map metadata is available, show which of the above maps are active
     maps = context.get("maps") or []
-    if map_name and maps:
-        m = next((mm for mm in maps if (mm.get("name") or "").lower() == str(map_name).lower()), None)
-        if m and m.get("isActiveMap") is not None:
-            console.print(f"  Active map: {'Yes' if m.get('isActiveMap') else 'No'}")
+    if map_names and maps:
+        active_names = []
+        for mn in map_names:
+            m = next((mm for mm in maps if (mm.get("name") or "").lower() == str(mn).lower()), None)
+            if m and m.get("isActiveMap") is True:
+                active_names.append(mn)
 
+        if len(map_names) == 1:
+            console.print(f"  Active map: {'Yes' if active_names else 'No'}")
+        elif active_names:
+            console.print(f"  Active maps: {', '.join(active_names)}")
     console.print(f"  Type: {layer.get('layerType', '-')}")
     console.print(f"  Geometry: {layer.get('geometryType', '-') or '-'}")
     console.print(f"  Visible: {'Yes' if layer.get('isVisible') else 'No'}")

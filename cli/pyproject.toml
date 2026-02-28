@@ -37,6 +37,10 @@ dev = [
 ]
 
 [project.scripts]
+# Primary CLI entrypoint
+arcgis = "arcgispro_cli.cli:main"
+
+# Backwards-compatible aliases
 arcgispro = "arcgispro_cli.cli:main"
 agp = "arcgispro_cli.cli:main"
 
