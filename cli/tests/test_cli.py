@@ -52,7 +52,38 @@ def test_status_no_folder():
 def test_addin_bundled():
     """Test that the add-in file is bundled."""
     from arcgispro_cli.commands.install import get_addin_path
-    
+
     addin_path = get_addin_path()
     assert addin_path.exists(), f"Add-in not found at {addin_path}"
     assert addin_path.suffix == ".addin"
+
+
+def _write_json(path, obj):
+    import json
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(obj, indent=2), encoding="utf-8")
+
+
+def test_layer_shows_active_map_flag():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        from pathlib import Path
+
+        _write_json(
+            Path(".arcgispro/context/maps.json"),
+            [
+                {"name": "Map A", "isActiveMap": True},
+                {"name": "Map B", "isActiveMap": False},
+            ],
+        )
+        _write_json(
+            Path(".arcgispro/context/layers.json"),
+            [
+                {"name": "Layer 1", "mapName": "Map A", "isVisible": True},
+            ],
+        )
+
+        result = runner.invoke(main, ["layer", "Layer 1"])
+        assert result.exit_code == 0
+        assert "Active map: Yes" in result.output

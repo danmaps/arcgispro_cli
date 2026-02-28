@@ -241,6 +241,7 @@ def layer_cmd(name, path, as_json):
 
     console.print()
     console.print(Panel.fit(f"[bold]{layer.get('name', 'Unknown')}[/bold]", title="Layer"))
+    # Map membership (a layer can appear in multiple maps)
     if map_names:
         if len(map_names) == 1:
             console.print(f"  Map: {map_names[0]}")
@@ -248,6 +249,20 @@ def layer_cmd(name, path, as_json):
             console.print(f"  Maps: {', '.join(map_names)}")
     else:
         console.print("  Map: -")
+
+    # If map metadata is available, show which of the above maps are active
+    maps = context.get("maps") or []
+    if map_names and maps:
+        active_names = []
+        for mn in map_names:
+            m = next((mm for mm in maps if (mm.get("name") or "").lower() == str(mn).lower()), None)
+            if m and m.get("isActiveMap") is True:
+                active_names.append(mn)
+
+        if len(map_names) == 1:
+            console.print(f"  Active map: {'Yes' if active_names else 'No'}")
+        elif active_names:
+            console.print(f"  Active maps: {', '.join(active_names)}")
     console.print(f"  Type: {layer.get('layerType', '-')}")
     console.print(f"  Geometry: {layer.get('geometryType', '-') or '-'}")
     console.print(f"  Visible: {'Yes' if layer.get('isVisible') else 'No'}")
