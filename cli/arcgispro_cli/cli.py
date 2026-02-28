@@ -3,25 +3,25 @@ ArcGIS Pro CLI - Main entry point
 
 Commands:
     # Setup
-    arcgispro install       - Install the ProExporter add-in
-    arcgispro uninstall     - Show uninstall instructions
-    arcgispro status        - Show export status and validate files
-    arcgispro clean         - Remove generated files
-    arcgispro open          - Open folder or select project
-    arcgispro launch        - Launch ArcGIS Pro
+    arcgis install       - Install the ProExporter add-in
+    arcgis uninstall     - Show uninstall instructions
+    arcgis status        - Show export status and validate files
+    arcgis clean         - Remove generated files
+    arcgis open          - Open folder or select project
+    arcgis launch        - Launch ArcGIS Pro
     
     # Query
-    arcgispro project       - Show project info
-    arcgispro maps          - List all maps
-    arcgispro map [name]    - Show map details
-    arcgispro layers        - List all layers
-    arcgispro layer <name>  - Show layer details + fields
-    arcgispro fields <name> - Show field schema for a layer
-    arcgispro tables        - List standalone tables
-    arcgispro connections   - List data connections
-    arcgispro notebooks     - List Jupyter notebooks
-    arcgispro context       - Print full markdown summary
-    arcgispro diagram       - Render project structure diagram
+    arcgis project       - Show project info
+    arcgis maps          - List all maps
+    arcgis map [name]    - Show map details
+    arcgis layers        - List all layers
+    arcgis layer <name>  - Show layer details + fields
+    arcgis fields <name> - Show field schema for a layer
+    arcgis tables        - List standalone tables
+    arcgis connections   - List data connections
+    arcgis notebooks     - List Jupyter notebooks
+    arcgis context       - Print full markdown summary
+    arcgis diagram       - Render project structure diagram
 """
 
 import sys
@@ -42,7 +42,7 @@ console = Console()
 
 
 @click.group(invoke_without_command=True)
-@click.version_option(version=__version__, prog_name="arcgispro")
+@click.version_option(version=__version__, prog_name="arcgis")
 @click.pass_context
 def main(ctx):
     """ArcGIS Pro CLI - Query exported session context.
@@ -54,11 +54,11 @@ def main(ctx):
     \b
     Quick start:
         pip install arcgispro-cli
-        arcgispro install            # Install add-in (one time)
+        arcgis install               # Install add-in (one time)
         # In ArcGIS Pro: Click "Snapshot" in the CLI tab
-        arcgispro layers             # List layers
-        arcgispro layer "Parcels"    # Get layer details
-        arcgispro fields "Parcels"   # Get field schema
+        arcgis layers                # List layers
+        arcgis layer "Parcels"       # Get layer details
+        arcgis fields "Parcels"      # Get field schema
     """
     ctx.ensure_object(dict)
     if ctx.invoked_subcommand is None:

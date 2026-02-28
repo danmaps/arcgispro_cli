@@ -453,15 +453,15 @@ namespace ProExporter
             var content = $@"# ArcGIS Pro Session Context
 
 > **Snapshot taken:** {timestamp} UTC
-> **Use the `arcgispro` CLI to query this data.**
+> **Use the `arcgis` CLI to query this data.** (Aliases: `arcgispro`, `agp`)
 
 ## Quick Start
 
 ```bash
-arcgispro layers              # List all layers
-arcgispro layer ""LayerName""   # Layer details + fields  
-arcgispro fields ""LayerName""  # Just the fields
-arcgispro context             # Full markdown summary
+arcgis layers              # List all layers
+arcgis layer ""LayerName""   # Layer details + fields  
+arcgis fields ""LayerName""  # Just the fields
+arcgis context             # Full markdown summary
 ```
 
 Add `--json` to any command for structured output.
@@ -485,19 +485,19 @@ Ask the user to click **Snapshot** in ArcGIS Pro when:
 
 | Command | Purpose |
 |---------|---------|
-| `arcgispro project` | Project name, path, geodatabases |
-| `arcgispro maps` | List all maps |
-| `arcgispro map ""Name""` | Map details (scale, extent, SR) |
-| `arcgispro layers` | List all layers across all maps |
-| `arcgispro layers --broken` | Only layers with broken data sources |
-| `arcgispro layer ""Name""` | Layer details + field schema |
-| `arcgispro fields ""Name""` | Just the fields for a layer |
-| `arcgispro tables` | Standalone tables |
-| `arcgispro connections` | Database/folder connections |
-| `arcgispro notebooks` | Jupyter notebooks in project |
-| `arcgispro context` | Full markdown dump (good for pasting) |
-| `arcgispro diagram` | Render Mermaid diagram of project structure |
-| `arcgispro status` | Validate export files |
+| `arcgis project` | Project name, path, geodatabases |
+| `arcgis maps` | List all maps |
+| `arcgis map ""Name""` | Map details (scale, extent, SR) |
+| `arcgis layers` | List all layers across all maps |
+| `arcgis layers --broken` | Only layers with broken data sources |
+| `arcgis layer ""Name""` | Layer details + field schema |
+| `arcgis fields ""Name""` | Just the fields for a layer |
+| `arcgis tables` | Standalone tables |
+| `arcgis connections` | Database/folder connections |
+| `arcgis notebooks` | Jupyter notebooks in project |
+| `arcgis context` | Full markdown dump (good for pasting) |
+| `arcgis diagram` | Render Mermaid diagram of project structure |
+| `arcgis status` | Validate export files |
 
 ## File Structure
 
@@ -565,13 +565,14 @@ Edit `.arcgispro/config.yml` to control exports:
 
 If you generate **analysis or automation artifacts** for a specific request/task (scripts, notebooks, conclusions, data transforms), write a small checkpoint note **once per task** and commit it alongside the work.
 
-- Filename: `checkpoint_YYYYMMDDTHHMMSSZ.md` (UTC, filesystem-safe)
+- Filename: `checkpoint_{task_slug}_YYYYMMDDTHHMMSSZ.md` (UTC, filesystem-safe)
+- Example: `checkpoint_add_trans_segments_20240315T142500Z.md`
 - Location: project root (same folder as this `AGENTS.md`)
 
 Template:
 
 ```md
-# Checkpoint (YYYY-MM-DDTHH:MM:SSZ)
+# Checkpoint: {Task Name} (YYYY-MM-DDTHH:MM:SSZ)
 
 ## Intent
 What question are we answering?
@@ -606,7 +607,7 @@ Notes:
 
 ## Tips
 
-- Use `arcgispro layer ""partial""` — partial name matching works
+- Use `arcgis layer ""partial""` — partial name matching works
 - Check `selectionCount` to see if user has features selected
 - The CLI is **read-only** — it never modifies the .aprx or data
 - Run from the project folder or any subfolder
@@ -620,7 +621,7 @@ Proprietary AI advisors are available for deeper analysis:
 
 Access via: https://api.x402layer.cc/e/esri-smells
 
-Run `arcgispro inspect` to see context-aware suggestions for when to use these advisors.
+Run `arcgis inspect` to see context-aware suggestions for when to use these advisors.
 ";
             await File.WriteAllTextAsync(path, content, Encoding.UTF8);
         }
