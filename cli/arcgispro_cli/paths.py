@@ -1,6 +1,7 @@
 """Utility functions for finding and validating .arcgispro folders."""
 
 import json
+import re
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 
@@ -51,36 +52,43 @@ def get_snapshot_folder(arcgispro_path: Path) -> Path:
 
 
 def sanitize_map_name(name: str) -> str:
-    """
-    Sanitize a map name for use as a filename.
-    
-    Replicates the C# SanitizeFileName logic from ImageExporter.cs.
-    Replaces invalid filename characters with underscores, truncates to 50 chars.
-    
-    Args:
-        name: The map or layer name to sanitize.
-        
-    Returns:
-        Sanitized filename without extension, or "unnamed" if empty.
+    """Sanitize a map/layer name for use as a filename.
+
+    Intended to match the ProExporter add-in's filename sanitization.
+
+    Rules:
+    - Replace Windows-invalid filename characters with underscores
+    - Replace ASCII control chars (0-31) with underscores
+    - Collapse whitespace to single underscores
+    - Truncate to 50 characters
+
+    Returns "unnamed" if the input is empty/whitespace, or if sanitization
+    results in an empty name.
     """
     if not name or not name.strip():
         return "unnamed"
-    
-    # Invalid filename characters: / \ : * ? " < > |
-    invalid_chars = ['/', '\\', ':', '*', '?', '"', '<', '>', '|']
-    
-    sanitized = name
-    for char in invalid_chars:
-        sanitized = sanitized.replace(char, '_')
-    
-    # Replace spaces with underscores
-    sanitized = sanitized.replace(' ', '_')
-    
-    # Truncate to 50 characters
-    if len(sanitized) > 50:
-        sanitized = sanitized[:50]
-    
-    return sanitized
+
+    # Windows-invalid filename characters: <>:"/\\|?*
+    # Plus ASCII control chars (0-31) which Windows also disallows.
+    invalid_chars = set('<>:"/\\|?*')
+
+    def repl(match: re.Match) -> str:
+        ch = match.group(0)
+        if ch in invalid_chars or ord(ch) < 32:
+            return "_"
+        # Any whitespace becomes underscore
+        return "_"
+
+    # Replace invalid chars and whitespace with underscores.
+    sanitized = re.sub(r"[\s<>:\"/\\|\?\*\x00-\x1f]", repl, name)
+
+    # Collapse repeated underscores and trim.
+    sanitized = re.sub(r"_+", "_", sanitized).strip("_")
+
+    if not sanitized:
+        return "unnamed"
+
+    return sanitized[:50]
 
 
 def load_json_file(path: Path) -> Optional[Dict[str, Any]]:
