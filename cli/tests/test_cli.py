@@ -31,6 +31,16 @@ def test_install_help():
     assert "ProExporter" in result.output
 
 
+def test_tui_without_optional_deps_gives_helpful_error():
+    runner = CliRunner()
+    result = runner.invoke(main, ["tui"])
+
+    # Without the optional Textual dependency, this should fail fast with guidance.
+    # (In dev envs where textual is installed, this test may need updating.)
+    assert result.exit_code != 0
+    assert "arcgispro-cli[tui]" in result.output
+
+
 def test_layers_no_folder():
     """Test layers command when no .arcgispro folder exists."""
     runner = CliRunner()

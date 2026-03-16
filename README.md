@@ -7,6 +7,10 @@ Give AI agents eyes into ArcGIS Pro.
 
 ```bash
 pip install arcgispro-cli
+
+# Optional: install TUI dependencies
+pip install arcgispro-cli[tui]
+
 arcgis install
 ```
 
