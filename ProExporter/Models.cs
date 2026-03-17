@@ -103,6 +103,30 @@ namespace ProExporter
         public bool IsNullable { get; set; }
         public bool IsEditable { get; set; }
         public string DomainName { get; set; }
+        public FieldStatistics Stats { get; set; }
+    }
+
+    /// <summary>
+    /// Per-field summary statistics (numeric, string, or date)
+    /// </summary>
+    public class FieldStatistics
+    {
+        public long Count { get; set; }
+        public long NullCount { get; set; }
+        public long? UniqueCount { get; set; }
+
+        // Numeric fields
+        public double? Min { get; set; }
+        public double? Max { get; set; }
+        public double? Mean { get; set; }
+        public double? Std { get; set; }
+
+        // String fields
+        public List<string> TopValues { get; set; }
+
+        // Date fields
+        public string MinDate { get; set; }
+        public string MaxDate { get; set; }
     }
 
     /// <summary>

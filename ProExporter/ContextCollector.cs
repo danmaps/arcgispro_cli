@@ -60,11 +60,11 @@ namespace ProExporter
                     context.Maps.Add(mapInfo);
 
                     // Collect layers
-                    var layers = CollectLayerInfo(map, options.ExportFields, options.SampleRowCount, options.ExportFastSchema);
+                    var layers = CollectLayerInfo(map, options);
                     context.Layers.AddRange(layers);
 
                     // Collect standalone tables
-                    var tables = CollectTableInfo(map, options.ExportFields, options.SampleRowCount, options.ExportFastSchema);
+                    var tables = CollectTableInfo(map, options);
                     context.Tables.AddRange(tables);
                 }
 
@@ -233,7 +233,7 @@ namespace ProExporter
         /// <summary>
         /// Collect layer information from a map
         /// </summary>
-        private static List<LayerInfo> CollectLayerInfo(Map map, bool exportFields, int sampleRowCount, bool exportFastSchema)
+        private static List<LayerInfo> CollectLayerInfo(Map map, ExportOptions options)
         {
             var layers = new List<LayerInfo>();
             
@@ -258,7 +258,7 @@ namespace ProExporter
                 // Feature layer specific properties
                 if (layer is FeatureLayer featureLayer)
                 {
-                    CollectFeatureLayerInfo(featureLayer, info, exportFields, sampleRowCount, exportFastSchema);
+                    CollectFeatureLayerInfo(featureLayer, info, options);
                 }
                 // Raster layer
                 else if (layer is RasterLayer rasterLayer)
@@ -281,8 +281,11 @@ namespace ProExporter
         /// <summary>
         /// Collect feature layer specific information
         /// </summary>
-        private static void CollectFeatureLayerInfo(FeatureLayer featureLayer, LayerInfo info, bool exportFields, int sampleRowCount, bool exportFastSchema)
+        private static void CollectFeatureLayerInfo(FeatureLayer featureLayer, LayerInfo info, ExportOptions options)
         {
+            var exportFields = options.ExportFields;
+            var sampleRowCount = options.SampleRowCount;
+            var exportFastSchema = options.ExportFastSchema;
             info.IsEditable = featureLayer.IsEditable;
             info.DefinitionQuery = featureLayer.DefinitionQuery;
 
@@ -332,6 +335,19 @@ namespace ProExporter
                             catch
                             {
                                 // Sample data collection may fail
+                            }
+                        }
+
+                        // Field statistics (if enabled)
+                        if (options.ExportFieldStats && info.Fields != null && info.Fields.Count > 0)
+                        {
+                            try
+                            {
+                                CollectFieldStatistics(fc, info.Fields, options.FieldStatsMaxRows);
+                            }
+                            catch
+                            {
+                                // Stats collection may fail
                             }
                         }
                     }
@@ -493,8 +509,11 @@ namespace ProExporter
         /// <summary>
         /// Collect standalone table information from a map
         /// </summary>
-        private static List<TableInfo> CollectTableInfo(Map map, bool exportFields, int sampleRowCount, bool exportFastSchema)
+        private static List<TableInfo> CollectTableInfo(Map map, ExportOptions options)
         {
+            var exportFields = options.ExportFields;
+            var sampleRowCount = options.SampleRowCount;
+            var exportFastSchema = options.ExportFastSchema;
             var tables = new List<TableInfo>();
             
             foreach (var table in map.StandaloneTables)
@@ -543,6 +562,19 @@ namespace ProExporter
                                 catch
                                 {
                                     // Sample data collection may fail
+                                }
+                            }
+
+                            // Field statistics (if enabled)
+                            if (options.ExportFieldStats && info.Fields != null && info.Fields.Count > 0)
+                            {
+                                try
+                                {
+                                    CollectFieldStatisticsFromTable(tbl, info.Fields, options.FieldStatsMaxRows);
+                                }
+                                catch
+                                {
+                                    // Stats collection may fail
                                 }
                             }
                         }
@@ -1046,6 +1078,257 @@ namespace ProExporter
             }
 
             return samples;
+        }
+
+        /// <summary>
+        /// Compute per-field statistics from a feature class and populate FieldInfo.Stats
+        /// </summary>
+        private static void CollectFieldStatistics(FeatureClass fc, List<FieldInfo> fieldInfos, int maxRows)
+        {
+            var fcDef = fc.GetDefinition();
+            var fields = fcDef.GetFields();
+            ComputeFieldStatistics(fc, fields, fieldInfos, maxRows);
+        }
+
+        /// <summary>
+        /// Compute per-field statistics from a standalone table and populate FieldInfo.Stats
+        /// </summary>
+        private static void CollectFieldStatisticsFromTable(Table table, List<FieldInfo> fieldInfos, int maxRows)
+        {
+            var tblDef = table.GetDefinition();
+            var fields = tblDef.GetFields();
+            ComputeFieldStatistics(table, fields, fieldInfos, maxRows);
+        }
+
+        private static readonly HashSet<string> NumericFieldTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "SmallInteger", "Integer", "Single", "Double", "OID", "BigInteger"
+        };
+
+        private static readonly HashSet<string> StringFieldTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "String", "GUID", "GlobalID", "XML"
+        };
+
+        private static readonly HashSet<string> DateFieldTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Date", "DateOnly", "TimeOnly", "TimestampOffset"
+        };
+
+        /// <summary>
+        /// Scan rows and compute summary statistics for each field
+        /// </summary>
+        private static void ComputeFieldStatistics(Table table, IReadOnlyList<Field> fields, List<FieldInfo> fieldInfos, int maxRows)
+        {
+            // Build lookup from field name to FieldInfo
+            var fieldMap = new Dictionary<string, FieldInfo>(StringComparer.OrdinalIgnoreCase);
+            foreach (var fi in fieldInfos)
+                fieldMap[fi.Name] = fi;
+
+            // Build per-field accumulators (skip Shape and fields not in our FieldInfo list)
+            var accumulators = new List<FieldAccumulator>();
+            var fieldIndices = new List<int>();
+            for (int i = 0; i < fields.Count; i++)
+            {
+                var field = fields[i];
+                if (field.Name.Equals("Shape", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                if (!fieldMap.ContainsKey(field.Name))
+                    continue;
+
+                var ft = field.FieldType.ToString();
+                accumulators.Add(new FieldAccumulator(field.Name, ft));
+                fieldIndices.Add(i);
+            }
+
+            if (accumulators.Count == 0)
+                return;
+
+            // Scan rows
+            using (var cursor = table.Search())
+            {
+                int rowsRead = 0;
+                while (cursor.MoveNext() && (maxRows <= 0 || rowsRead < maxRows))
+                {
+                    using (var row = cursor.Current)
+                    {
+                        if (row == null) continue;
+
+                        for (int j = 0; j < accumulators.Count; j++)
+                        {
+                            try
+                            {
+                                var value = row[fieldIndices[j]];
+                                accumulators[j].Add(value);
+                            }
+                            catch
+                            {
+                                accumulators[j].Add(null);
+                            }
+                        }
+                        rowsRead++;
+                    }
+                }
+            }
+
+            // Finalize and assign stats to FieldInfo objects
+            foreach (var acc in accumulators)
+            {
+                if (fieldMap.TryGetValue(acc.FieldName, out var fi))
+                {
+                    fi.Stats = acc.ToStatistics();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Accumulates values for a single field during row scan
+        /// </summary>
+        private class FieldAccumulator
+        {
+            public string FieldName { get; }
+            private readonly string _fieldType;
+
+            private long _count;
+            private long _nullCount;
+
+            // Numeric
+            private double _sum;
+            private double _sumSq;
+            private double _min = double.MaxValue;
+            private double _max = double.MinValue;
+            private long _numericCount;
+
+            // String top values
+            private Dictionary<string, int> _valueCounts;
+            private bool _isString;
+
+            // Date
+            private DateTime _minDate = DateTime.MaxValue;
+            private DateTime _maxDate = DateTime.MinValue;
+            private bool _isDate;
+            private long _dateCount;
+
+            // Unique tracking (for all types)
+            private HashSet<string> _uniqueValues;
+            private bool _uniqueOverflow;
+            private const int MaxUniqueTracked = 10000;
+
+            public FieldAccumulator(string fieldName, string fieldType)
+            {
+                FieldName = fieldName;
+                _fieldType = fieldType;
+                _isString = StringFieldTypes.Contains(fieldType);
+                _isDate = DateFieldTypes.Contains(fieldType);
+
+                if (_isString)
+                    _valueCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+
+                _uniqueValues = new HashSet<string>(StringComparer.Ordinal);
+            }
+
+            public void Add(object value)
+            {
+                _count++;
+
+                if (value == null || value is DBNull)
+                {
+                    _nullCount++;
+                    return;
+                }
+
+                // Track uniques (up to limit)
+                if (!_uniqueOverflow)
+                {
+                    var key = value.ToString();
+                    _uniqueValues.Add(key);
+                    if (_uniqueValues.Count > MaxUniqueTracked)
+                        _uniqueOverflow = true;
+                }
+
+                if (NumericFieldTypes.Contains(_fieldType))
+                {
+                    if (TryToDouble(value, out double d))
+                    {
+                        _numericCount++;
+                        _sum += d;
+                        _sumSq += d * d;
+                        if (d < _min) _min = d;
+                        if (d > _max) _max = d;
+                    }
+                }
+                else if (_isString)
+                {
+                    var s = value.ToString();
+                    if (_valueCounts.ContainsKey(s))
+                        _valueCounts[s]++;
+                    else if (_valueCounts.Count < MaxUniqueTracked)
+                        _valueCounts[s] = 1;
+                }
+                else if (_isDate)
+                {
+                    DateTime dt;
+                    if (value is DateTime d)
+                        dt = d;
+                    else if (value is DateTimeOffset dto)
+                        dt = dto.UtcDateTime;
+                    else
+                        return;
+
+                    _dateCount++;
+                    if (dt < _minDate) _minDate = dt;
+                    if (dt > _maxDate) _maxDate = dt;
+                }
+            }
+
+            public FieldStatistics ToStatistics()
+            {
+                var stats = new FieldStatistics
+                {
+                    Count = _count,
+                    NullCount = _nullCount,
+                    UniqueCount = _uniqueOverflow ? null : (long?)_uniqueValues.Count
+                };
+
+                if (NumericFieldTypes.Contains(_fieldType) && _numericCount > 0)
+                {
+                    stats.Min = _min;
+                    stats.Max = _max;
+                    stats.Mean = Math.Round(_sum / _numericCount, 6);
+                    if (_numericCount > 1)
+                    {
+                        var variance = (_sumSq / _numericCount) - (stats.Mean.Value * stats.Mean.Value);
+                        stats.Std = Math.Round(Math.Sqrt(Math.Max(0, variance)), 6);
+                    }
+                }
+                else if (_isString && _valueCounts != null && _valueCounts.Count > 0)
+                {
+                    stats.TopValues = _valueCounts
+                        .OrderByDescending(kv => kv.Value)
+                        .Take(5)
+                        .Select(kv => kv.Key)
+                        .ToList();
+                }
+                else if (_isDate && _dateCount > 0)
+                {
+                    stats.MinDate = _minDate.ToString("o");
+                    stats.MaxDate = _maxDate.ToString("o");
+                }
+
+                return stats;
+            }
+
+            private static bool TryToDouble(object value, out double result)
+            {
+                if (value is double d) { result = d; return true; }
+                if (value is int i) { result = i; return true; }
+                if (value is long l) { result = l; return true; }
+                if (value is float f) { result = f; return true; }
+                if (value is short s) { result = s; return true; }
+                if (value is decimal m) { result = (double)m; return true; }
+                result = 0;
+                return false;
+            }
         }
 
         /// <summary>

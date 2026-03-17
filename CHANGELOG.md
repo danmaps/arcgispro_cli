@@ -9,8 +9,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-03-17
+
+_Re-release of 0.5.0 with correct PyPI publishing._
+
+## [0.5.0] - 2026-03-17
+
+### Added
+
+- **Add-in:** Per-field summary statistics export (`exportFieldStats` config option) — computes count, nullCount, uniqueCount, min/max/mean/std for numeric fields, topValues for strings, and min/max dates
+- **Add-in:** `fieldStatsMaxRows` config option (default 50,000) to cap row scans for large datasets
+- **Add-in:** `dataSourceKind` field on layers/tables (file_gdb, enterprise_gdb, service, shapefile, raster, unknown)
+- **Add-in:** Fast schema export mode (`exportFastSchema`) — fields only, no counts or sampling
+- **CLI:** `arcgis` primary entrypoint (keeps `arcgispro` / `agp` aliases)
+- **CLI:** `--active` flag on `layers` and `tables` commands to filter to the active map
+- **CLI:** Layer details now show map membership and active map flag
+- **CLI:** `status` command with doctor-like checks, `--json` and `--strict` flags
+- **Docs:** Quickstart guide
+
+### Changed
+
+- **Add-in:** AGENTS.md references updated to use `arcgis` command
+- **Add-in:** Checkpoint filenames include task name slug
+- **CLI:** TUI (Textual) is now an optional dependency (`pip install arcgispro-cli[tui]`)
+- **CLI:** `inspect` suggestions are now generic (no paid tooling references)
+
 ### Fixed
 
+- **Add-in:** Sanitize map names using full Windows invalid character set
+- **CLI:** Show 0 counts correctly in query output
 - Ignore local `tmp/` scratch folder in git status
 
 ## [0.4.0] - 2026-02-19

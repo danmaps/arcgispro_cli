@@ -26,6 +26,16 @@ namespace ProExporter
         public bool ExportFastSchema { get; set; } = false;
 
         /// <summary>
+        /// Compute per-field summary statistics (count, nulls, min/max, top values)
+        /// </summary>
+        public bool ExportFieldStats { get; set; } = false;
+
+        /// <summary>
+        /// Maximum rows to scan when computing field statistics (0 = all rows)
+        /// </summary>
+        public int FieldStatsMaxRows { get; set; } = 50000;
+
+        /// <summary>
         /// Number of sample rows to export per layer/table (0 = none)
         /// </summary>
         public int SampleRowCount { get; set; } = 10;
@@ -49,6 +59,8 @@ namespace ProExporter
                 ExportNotebooks = config.ExportNotebooks,
                 ExportFields = exportFields,
                 ExportFastSchema = exportFastSchema,
+                ExportFieldStats = config.ExportFieldStats,
+                FieldStatsMaxRows = config.FieldStatsMaxRows,
                 SampleRowCount = config.SampleRowCount,
                 ActiveMapOnly = false
             };

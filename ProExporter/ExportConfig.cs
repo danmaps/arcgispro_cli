@@ -17,6 +17,8 @@ namespace ProExporter
         public bool ExportNotebooks { get; set; } = true;
         public bool ExportFields { get; set; } = true;
         public bool ExportFastSchema { get; set; } = false;
+        public bool ExportFieldStats { get; set; } = false;
+        public int FieldStatsMaxRows { get; set; } = 50000;
         public int SampleRowCount { get; set; } = 10;
 
         /// <summary>
