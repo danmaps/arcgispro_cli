@@ -22,13 +22,15 @@ class ArcGISProCLIApp(App):
         ("q", "quit", "Quit"),
     ]
 
-    def __init__(self, repo_path: str = ".", **kwargs):
+    def __init__(self, repo_path: str = ".", show_banner: bool = True, **kwargs):
         super().__init__(**kwargs)
         self.state = TUIState(repo_path=repo_path)
+        self._show_banner = show_banner
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=False)
-        yield Banner()
+        if self._show_banner:
+            yield Banner()
         with Horizontal(id="main"):
             yield ProjectTree(id="tree-panel", state=self.state)
             with Vertical(id="right"):
