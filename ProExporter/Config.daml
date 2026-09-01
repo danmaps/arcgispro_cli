@@ -5,7 +5,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
 
-  <AddInInfo id="{f7797648-ae51-4389-bb7b-489b6c635c87}" version="0.5.1" desktopVersion="3.6.59527" product="ArcGISPro">
+  <AddInInfo id="{f7797648-ae51-4389-bb7b-489b6c635c87}" version="0.6.0" desktopVersion="3.6.59527" product="ArcGISPro">
     <Name>ArcGIS Pro CLI</Name>   
     <Description>Exports ArcGIS Pro session context for AI agents and CLI tools</Description>
     <Image>pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/CreateSnapshot32.png</Image>
@@ -83,8 +83,8 @@
                 loadOnClick="true" 
                 smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/FolderOpenState16.png" 
                 largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/FolderOpenState32.png">
-          <tooltip heading="Open Output Folder">
-            Open the .arcgispro/ output folder in Explorer
+          <tooltip heading="Open Project Folder">
+            Open the project home folder in Explorer
           </tooltip>
         </button>
         <button id="ProExporter_OpenTerminalButton" 

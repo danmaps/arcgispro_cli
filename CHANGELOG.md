@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-01
+
+### Added
+
+- **Add-in:** `sampleGeometry` config option (default `false`) to opt back into full GeoJSON geometry in sample rows
+
+### Changed
+
+- **Add-in:** Sample data in `layers.json`/`tables.json` is now attribute-only by default and capped at 5 rows (`sampleRowCount` default 10 → 5). Raw sample geometry — which could balloon a manifest to hundreds of MB — is omitted unless `sampleGeometry: true`
+- **Add-in:** "Open Folder" ribbon button now opens the project home folder instead of the `.arcgispro` snapshot folder ([#52](https://github.com/danmaps/arcgispro_cli/issues/52))
+
+### Fixed
+
+- **CLI:** Pin `hatchling<1.32` for builds — hatchling 1.32 rejects the shared repo-root `README.md` (`../README.md`), which broke `python -m build` and the PyPI release
+
 ## [0.5.1] - 2026-03-17
 
 _Re-release of 0.5.0 with correct PyPI publishing._
