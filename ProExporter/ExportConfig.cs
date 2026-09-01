@@ -19,7 +19,8 @@ namespace ProExporter
         public bool ExportFastSchema { get; set; } = false;
         public bool ExportFieldStats { get; set; } = false;
         public int FieldStatsMaxRows { get; set; } = 50000;
-        public int SampleRowCount { get; set; } = 10;
+        public int SampleRowCount { get; set; } = 5;
+        public bool SampleGeometry { get; set; } = false;
 
         /// <summary>
         /// Load config from .arcgispro/config.yml or return defaults

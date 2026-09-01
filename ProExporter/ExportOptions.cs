@@ -38,7 +38,13 @@ namespace ProExporter
         /// <summary>
         /// Number of sample rows to export per layer/table (0 = none)
         /// </summary>
-        public int SampleRowCount { get; set; } = 10;
+        public int SampleRowCount { get; set; } = 5;
+
+        /// <summary>
+        /// Include full GeoJSON geometry in sample rows. Off by default because raw geometry
+        /// dominates manifest size (dense polygons/lines dump every vertex at full precision).
+        /// </summary>
+        public bool SampleGeometry { get; set; } = false;
 
         /// <summary>
         /// If true, only export content for the active map.
@@ -62,6 +68,7 @@ namespace ProExporter
                 ExportFieldStats = config.ExportFieldStats,
                 FieldStatsMaxRows = config.FieldStatsMaxRows,
                 SampleRowCount = config.SampleRowCount,
+                SampleGeometry = config.SampleGeometry,
                 ActiveMapOnly = false
             };
         }

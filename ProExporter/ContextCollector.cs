@@ -330,7 +330,7 @@ namespace ProExporter
                         {
                             try
                             {
-                                info.SampleData = CollectSampleDataFromFeatureClass(fc, sampleRowCount);
+                                info.SampleData = CollectSampleDataFromFeatureClass(fc, sampleRowCount, options.SampleGeometry);
                             }
                             catch
                             {
@@ -958,9 +958,10 @@ namespace ProExporter
         }
 
         /// <summary>
-        /// Collect sample data rows from a feature class (with geometry as GeoJSON)
+        /// Collect sample data rows from a feature class. Geometry is included only when
+        /// includeGeometry is true (off by default to keep manifests small).
         /// </summary>
-        private static List<SampleRow> CollectSampleDataFromFeatureClass(FeatureClass fc, int maxRows)
+        private static List<SampleRow> CollectSampleDataFromFeatureClass(FeatureClass fc, int maxRows, bool includeGeometry = false)
         {
             var samples = new List<SampleRow>();
             if (maxRows <= 0) return samples;
@@ -999,18 +1000,21 @@ namespace ProExporter
                                 }
                             }
 
-                            // Convert geometry to GeoJSON
-                            try
+                            // Convert geometry to GeoJSON (only when explicitly enabled)
+                            if (includeGeometry)
                             {
-                                var geom = row.GetShape();
-                                if (geom != null && !geom.IsEmpty)
+                                try
                                 {
-                                    sampleRow.Geometry = GeometryToGeoJson(geom);
+                                    var geom = row.GetShape();
+                                    if (geom != null && !geom.IsEmpty)
+                                    {
+                                        sampleRow.Geometry = GeometryToGeoJson(geom);
+                                    }
                                 }
-                            }
-                            catch
-                            {
-                                // Geometry conversion may fail
+                                catch
+                                {
+                                    // Geometry conversion may fail
+                                }
                             }
 
                             samples.Add(sampleRow);

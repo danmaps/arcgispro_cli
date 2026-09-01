@@ -535,6 +535,8 @@ Edit `.arcgispro/config.yml` to control exports:
 - `exportImages` — Include map screenshots (default: true)
 - `exportNotebooks` — Include notebook metadata (default: true)
 - `exportFields` — Include layer field schemas (default: true)
+- `sampleRowCount` — Sample rows per layer/table (default: 5, 0 = none)
+- `sampleGeometry` — Include full geometry in sample rows (default: false; off keeps manifests small)
 
 ## Key JSON Fields
 
@@ -548,6 +550,8 @@ Edit `.arcgispro/config.yml` to control exports:
 - `isBroken` — Data source is missing/broken
 - `definitionQuery` — SQL filter on the layer
 - `fields[]` — Array of field definitions
+- `sampleData[]` — Up to `sampleRowCount` sample rows (attributes only by default;
+  geometry included only when `sampleGeometry: true`)
 
 ### maps.json  
 - `isActiveMap` — true = user is currently viewing this map
