@@ -205,7 +205,8 @@ namespace ProExporter
         }
 
         /// <summary>
-        /// Open the output folder in Windows Explorer
+        /// Open the project home folder (working directory) in Windows Explorer.
+        /// The .arcgispro snapshot folder is for agents, not users, so we open its parent.
         /// </summary>
         public static void OpenOutputFolder()
         {
@@ -213,16 +214,15 @@ namespace ProExporter
             if (string.IsNullOrEmpty(outputFolder))
                 return;
 
-            // Create the folder if it doesn't exist
-            if (!Directory.Exists(outputFolder))
-            {
-                Directory.CreateDirectory(outputFolder);
-            }
+            // The project home folder is the parent of the .arcgispro output folder.
+            var projectFolder = Path.GetDirectoryName(outputFolder);
+            if (string.IsNullOrEmpty(projectFolder) || !Directory.Exists(projectFolder))
+                return;
 
             // Open in Explorer
             Process.Start(new ProcessStartInfo
             {
-                FileName = outputFolder,
+                FileName = projectFolder,
                 UseShellExecute = true
             });
         }
