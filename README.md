@@ -7,6 +7,8 @@
 
 Give AI agents eyes into ArcGIS Pro.
 
+Need help installing this, integrating it into your workflow, or building something similar? I offer small fixed-scope GIS automation projects. [Book a call](https://calendly.com/dannybmcvey).
+
 ```bash
 pip install arcgispro-cli
 
