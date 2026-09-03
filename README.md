@@ -1,5 +1,7 @@
 # ArcGIS Pro CLI
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z4L326AT14)
+
 [![PyPI](https://img.shields.io/pypi/v/arcgispro-cli)](https://pypi.org/project/arcgispro-cli/)
 [![CI](https://github.com/danmaps/arcgispro_cli/workflows/CI/badge.svg)](https://github.com/danmaps/arcgispro_cli/actions)
 
