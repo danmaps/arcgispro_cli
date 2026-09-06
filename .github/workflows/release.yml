@@ -28,6 +28,7 @@ jobs:
         with:
           name: dist
           path: cli/dist/
+          retention-days: 1
 
   publish:
     name: Publish to PyPI
