@@ -30,6 +30,10 @@
           <button refID="ProExporter_ExportImagesButton" size="middle" />
           <button refID="ProExporter_OpenFolderButton" size="middle" />
           <button refID="ProExporter_OpenTerminalButton" size="middle" />
+          <button refID="ProExporter_CopyLayerDataSourcePathButton" size="middle" />
+          <button refID="ProExporter_CopyProjectHomeFolderButton" size="middle" />
+          <button refID="ProExporter_CopyAprxPathButton" size="middle" />
+          <button refID="ProExporter_CopyLayerFieldsButton" size="middle" />
           <checkBox refID="ProExporter_ActiveMapOnlyCheckBox" size="middle" />
         </group>
       </groups>
@@ -95,6 +99,38 @@
                 largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GeoprocessingPythonWindowShow32.png">
           <tooltip heading="Open Terminal">
             Open terminal at project folder with ArcGIS Pro Python environment activated
+          </tooltip>
+        </button>
+        <button id="ProExporter_CopyLayerDataSourcePathButton"
+                caption="Copy Layer Path"
+                className="CopyLayerDataSourcePathButton"
+                loadOnClick="true">
+          <tooltip heading="Copy Layer Datasource Path">
+            Copy the selected layer datasource path from the Contents pane to the clipboard
+          </tooltip>
+        </button>
+        <button id="ProExporter_CopyProjectHomeFolderButton"
+                caption="Copy Home Folder"
+                className="CopyProjectHomeFolderButton"
+                loadOnClick="true">
+          <tooltip heading="Copy Project Home Folder">
+            Copy the current ArcGIS Pro project home folder to the clipboard
+          </tooltip>
+        </button>
+        <button id="ProExporter_CopyAprxPathButton"
+                caption="Copy APRX Path"
+                className="CopyAprxPathButton"
+                loadOnClick="true">
+          <tooltip heading="Copy APRX Path">
+            Copy the full path to the current .aprx file to the clipboard
+          </tooltip>
+        </button>
+        <button id="ProExporter_CopyLayerFieldsButton"
+                caption="Copy Layer Fields"
+                className="CopyLayerFieldsButton"
+                loadOnClick="true">
+          <tooltip heading="Copy Layer Fields">
+            Copy the selected feature layer field definitions to the clipboard as tab-separated text
           </tooltip>
         </button>
       </controls>
