@@ -162,3 +162,36 @@ def test_layer_shows_active_map_flag():
         result = runner.invoke(main, ["layer", "Layer 1"])
         assert result.exit_code == 0
         assert "Active map: Yes" in result.output
+
+
+def test_service_layer_metadata_only_still_displays():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        from pathlib import Path
+
+        _write_json(
+            Path(".arcgispro/context/maps.json"),
+            [{"name": "Map A", "isActiveMap": True}],
+        )
+        _write_json(
+            Path(".arcgispro/context/layers.json"),
+            [
+                {
+                    "name": "Hosted Parcels",
+                    "mapName": "Map A",
+                    "layerType": "FeatureLayer",
+                    "geometryType": "Polygon",
+                    "isVisible": True,
+                    "isEditable": False,
+                    "isBroken": False,
+                    "dataSourceKind": "service",
+                    "dataSourcePath": "https://example.arcgis.com/FeatureServer/0",
+                }
+            ],
+        )
+
+        result = runner.invoke(main, ["layer", "Hosted Parcels"])
+        assert result.exit_code == 0
+        assert "Hosted Parcels" in result.output
+        assert "Source: " in result.output
+        assert "https://example.arcgis.com/FeatureServer/0" in result.output
