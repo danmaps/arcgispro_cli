@@ -103,7 +103,10 @@ This happens if `C:\Program Files\ArcGIS\Pro\bin` is on your PATH. Options:
 
 ## Development
 
-To build the add-in from source, you'll need:
+The CLI test/build workflow now rebuilds the bundled add-in in CI on a self-hosted
+Windows runner with ArcGIS Pro and the Pro SDK installed.
+
+To build the add-in from source locally, you'll need:
 - Visual Studio 2022 with ArcGIS Pro SDK extension
 - .NET 8 SDK
 
@@ -113,7 +116,7 @@ git clone https://github.com/danmaps/arcgispro_cli.git
 cd arcgispro_cli/cli
 pip install -e .
 
-# Build add-in in Visual Studio
+# Build add-in in Visual Studio when testing add-in changes locally
 # Open ProExporter/ProExporter.sln
 # Build → Build Solution (Release)
 ```
