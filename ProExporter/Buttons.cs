@@ -1,11 +1,17 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
+using ArcGIS.Core.CIM;
+using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Contracts;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 
 namespace ProExporter
@@ -373,6 +379,331 @@ except Exception:
             {
                 // Non-critical - continue even if hook write fails
             }
+        }
+    }
+
+    /// <summary>
+    /// Button: Copy selected layer datasource path to clipboard
+    /// </summary>
+    public class CopyLayerDataSourcePathButton : Button
+    {
+        protected override async void OnClick()
+        {
+            if (!ExportController.CanExport())
+            {
+                MessageBox.Show("Please open a project first.", "ArcGIS Pro CLI",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            try
+            {
+                var payload = await QueuedTask.Run(ClipboardHelpers.GetSelectedLayerDataSourcePathPayload);
+                ClipboardHelpers.CopyPayloadToClipboard(payload);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "ArcGIS Pro CLI",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Button: Copy project home folder to clipboard
+    /// </summary>
+    public class CopyProjectHomeFolderButton : Button
+    {
+        protected override void OnClick()
+        {
+            if (!ExportController.CanExport())
+            {
+                MessageBox.Show("Please open a project first.", "ArcGIS Pro CLI",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var project = Project.Current;
+            var projectHome = project == null ? null : Path.GetDirectoryName(project.URI);
+            if (string.IsNullOrWhiteSpace(projectHome))
+            {
+                MessageBox.Show("Could not determine the current project home folder.", "ArcGIS Pro CLI",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            ClipboardHelpers.CopyPayloadToClipboard(new ClipboardHelpers.ClipboardPayload(
+                projectHome,
+                $"Copied project home folder to clipboard:\n{projectHome}"));
+        }
+    }
+
+    /// <summary>
+    /// Button: Copy APRX path to clipboard
+    /// </summary>
+    public class CopyAprxPathButton : Button
+    {
+        protected override void OnClick()
+        {
+            if (!ExportController.CanExport())
+            {
+                MessageBox.Show("Please open a project first.", "ArcGIS Pro CLI",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var project = Project.Current;
+            if (project == null || string.IsNullOrWhiteSpace(project.URI))
+            {
+                MessageBox.Show("Could not determine the current project path.", "ArcGIS Pro CLI",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            ClipboardHelpers.CopyPayloadToClipboard(new ClipboardHelpers.ClipboardPayload(
+                project.URI,
+                $"Copied APRX path to clipboard:\n{project.URI}"));
+        }
+    }
+
+    /// <summary>
+    /// Button: Copy selected layer fields to clipboard
+    /// </summary>
+    public class CopyLayerFieldsButton : Button
+    {
+        protected override async void OnClick()
+        {
+            if (!ExportController.CanExport())
+            {
+                MessageBox.Show("Please open a project first.", "ArcGIS Pro CLI",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            try
+            {
+                var payload = await QueuedTask.Run(ClipboardHelpers.GetSelectedLayerFieldsPayload);
+                ClipboardHelpers.CopyPayloadToClipboard(payload);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "ArcGIS Pro CLI",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+    }
+
+    internal static class ClipboardHelpers
+    {
+        internal record ClipboardPayload(string Text, string SuccessMessage);
+
+        internal static void CopyPayloadToClipboard(ClipboardPayload payload)
+        {
+            if (payload == null || string.IsNullOrWhiteSpace(payload.Text))
+            {
+                MessageBox.Show("There is nothing to copy to the clipboard.", "ArcGIS Pro CLI",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            Clipboard.SetText(payload.Text);
+            MessageBox.Show(payload.SuccessMessage, "ArcGIS Pro CLI",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        internal static ClipboardPayload GetSelectedLayerDataSourcePathPayload()
+        {
+            var layer = GetSelectedLayer();
+
+            if (layer is FeatureLayer featureLayer)
+            {
+                using var featureClass = featureLayer.GetFeatureClass();
+                if (featureClass == null)
+                    throw new InvalidOperationException($"Could not access the datasource for '{layer.Name}'.");
+
+                using var datastore = featureClass.GetDatastore();
+                var datasetName = featureClass.GetDefinition()?.GetName();
+                var fullPath = BuildDatasetPath(datastore, datasetName);
+                if (string.IsNullOrWhiteSpace(fullPath))
+                    throw new InvalidOperationException($"Could not determine the datasource path for '{layer.Name}'.");
+
+                return new ClipboardPayload(
+                    fullPath,
+                    $"Copied datasource path for '{layer.Name}' to clipboard:\n{fullPath}");
+            }
+
+            if (layer is RasterLayer rasterLayer)
+            {
+                var fullPath = GetRasterLayerPath(rasterLayer);
+                if (string.IsNullOrWhiteSpace(fullPath))
+                    throw new InvalidOperationException($"Could not determine the datasource path for '{layer.Name}'.");
+
+                return new ClipboardPayload(
+                    fullPath,
+                    $"Copied datasource path for '{layer.Name}' to clipboard:\n{fullPath}");
+            }
+
+            throw new InvalidOperationException(
+                $"Layer '{layer.Name}' does not expose a copyable datasource path. Select a feature or raster layer.");
+        }
+
+        internal static ClipboardPayload GetSelectedLayerFieldsPayload()
+        {
+            var layer = GetSelectedLayer();
+            if (layer is not FeatureLayer featureLayer)
+            {
+                throw new InvalidOperationException(
+                    $"Layer '{layer.Name}' does not expose field definitions. Select a feature layer.");
+            }
+
+            using var featureClass = featureLayer.GetFeatureClass();
+            if (featureClass == null)
+                throw new InvalidOperationException($"Could not access the fields for '{layer.Name}'.");
+
+            var definition = featureClass.GetDefinition();
+            var fields = definition?.GetFields()?.ToList() ?? new List<Field>();
+            if (fields.Count == 0)
+                throw new InvalidOperationException($"Layer '{layer.Name}' has no fields to copy.");
+
+            var rows = new StringBuilder();
+            rows.AppendLine("Name\tAlias\tType\tLength\tNullable\tEditable\tDomain");
+
+            foreach (var field in fields)
+            {
+                rows.AppendLine(string.Join("\t", new[]
+                {
+                    SanitizeClipboardCell(field.Name),
+                    SanitizeClipboardCell(field.AliasName),
+                    SanitizeClipboardCell(field.FieldType.ToString()),
+                    field.Length.ToString(),
+                    field.IsNullable ? "true" : "false",
+                    field.IsEditable ? "true" : "false",
+                    SanitizeClipboardCell(GetDomainName(field))
+                }));
+            }
+
+            return new ClipboardPayload(
+                rows.ToString(),
+                $"Copied {fields.Count} field definitions from '{layer.Name}' to clipboard.");
+        }
+
+        private static Layer GetSelectedLayer()
+        {
+            var mapView = MapView.Active;
+            if (mapView?.Map == null)
+                throw new InvalidOperationException("Open a map and select a layer in the Contents pane first.");
+
+            var selectedLayers = mapView.GetSelectedLayers();
+            if (selectedLayers == null || selectedLayers.Count == 0)
+                throw new InvalidOperationException("Select a layer in the Contents pane first.");
+
+            return selectedLayers.First();
+        }
+
+        private static string BuildDatasetPath(Datastore datastore, string datasetName)
+        {
+            var datastorePath = GetDataStorePath(datastore);
+            if (string.IsNullOrWhiteSpace(datasetName))
+                return datastorePath;
+
+            if (datastore is FileSystemDatastore && string.IsNullOrEmpty(Path.GetExtension(datasetName)))
+                datasetName += ".shp";
+
+            if (string.IsNullOrWhiteSpace(datastorePath))
+                return datasetName;
+
+            return Path.Combine(datastorePath, datasetName);
+        }
+
+        private static string GetRasterLayerPath(RasterLayer rasterLayer)
+        {
+            try
+            {
+                var dataConnection = rasterLayer.GetDataConnection();
+                if (dataConnection is CIMStandardDataConnection standardConnection)
+                {
+                    var workspacePath = GetWorkspacePath(standardConnection.WorkspaceConnectionString);
+                    if (!string.IsNullOrWhiteSpace(workspacePath) && !string.IsNullOrWhiteSpace(standardConnection.Dataset))
+                        return Path.Combine(workspacePath, standardConnection.Dataset);
+
+                    if (!string.IsNullOrWhiteSpace(standardConnection.Dataset))
+                        return standardConnection.Dataset;
+                }
+            }
+            catch
+            {
+                // Fall back to layer name below if the data connection is unavailable.
+            }
+
+            return rasterLayer.Name;
+        }
+
+        private static string GetWorkspacePath(string workspaceConnectionString)
+        {
+            if (string.IsNullOrWhiteSpace(workspaceConnectionString))
+                return null;
+
+            var parts = workspaceConnectionString.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var part in parts)
+            {
+                var separatorIndex = part.IndexOf('=');
+                if (separatorIndex <= 0 || separatorIndex == part.Length - 1)
+                    continue;
+
+                var key = part.Substring(0, separatorIndex).Trim();
+                var value = part.Substring(separatorIndex + 1).Trim().Trim('"');
+                if (key.Equals("DATABASE", StringComparison.OrdinalIgnoreCase))
+                    return value;
+            }
+
+            return null;
+        }
+
+        private static string GetDataStorePath(Datastore datastore)
+        {
+            if (datastore == null)
+                return null;
+
+            try
+            {
+                if (datastore is Geodatabase geodatabase)
+                {
+                    var connector = geodatabase.GetConnector();
+                    if (connector is FileGeodatabaseConnectionPath fileGdb)
+                        return fileGdb.Path.LocalPath;
+                    if (connector is DatabaseConnectionFile databaseConnectionFile)
+                        return databaseConnectionFile.Path.LocalPath;
+                }
+                else if (datastore is FileSystemDatastore fileSystemDatastore)
+                {
+                    var connector = fileSystemDatastore.GetConnector();
+                    if (connector is FileSystemConnectionPath fileSystemConnectionPath)
+                        return fileSystemConnectionPath.Path.LocalPath;
+                }
+            }
+            catch
+            {
+                // Fall back below if connector inspection fails.
+            }
+
+            return datastore.GetConnectionString();
+        }
+
+        private static string GetDomainName(Field field)
+        {
+            try
+            {
+                return field.GetDomain()?.GetName() ?? string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
+        private static string SanitizeClipboardCell(string value)
+        {
+            return (value ?? string.Empty).Replace('\t', ' ').Replace('\r', ' ').Replace('\n', ' ');
         }
     }
 

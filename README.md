@@ -29,6 +29,8 @@ arcgis install
    arcgis layer "Parcels"
    ```
 
+The **CLI** ribbon tab also includes one-click copy buttons for the selected layer path, project home folder, APRX path, and selected layer fields.
+
 More: [docs/quickstart.md](docs/quickstart.md)
 
 ## What's New in v0.4.0
