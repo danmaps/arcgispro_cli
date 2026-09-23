@@ -304,8 +304,9 @@ namespace ProExporter
                         info.DataSourcePath = GetDataStorePath(dataStore);
                         info.DataSourceType = GetDataStoreType(dataStore);
                         info.DataSourceKind = NormalizeDataSourceKind(info.DataSourceType, info.DataSourcePath, null);
+                        var isServiceLayer = IsServiceLayer(info.DataSourceKind);
 
-                        if (!exportFastSchema)
+                        if (!exportFastSchema && !isServiceLayer)
                         {
                             // Feature count (can be slow for large datasets)
                             try
@@ -318,15 +319,20 @@ namespace ProExporter
                             }
                         }
 
-                        // Fields (if enabled)
-                        if (exportFields)
+                        // Service layers can carry very large service definitions/field payloads.
+                        // Keep snapshot exports concise by omitting heavyweight details.
+                        if (isServiceLayer)
+                        {
+                            info.DataSourcePath = GetConciseServiceUrl(info.DataSourcePath);
+                        }
+                        else if (exportFields)
                         {
                             var fcDef = fc.GetDefinition();
                             info.Fields = exportFastSchema ? CollectFieldInfoFast(fcDef) : CollectFieldInfo(fcDef);
                         }
 
                         // Sample data (if enabled)
-                        if (!exportFastSchema && sampleRowCount > 0)
+                        if (!isServiceLayer && !exportFastSchema && sampleRowCount > 0)
                         {
                             try
                             {
@@ -339,7 +345,7 @@ namespace ProExporter
                         }
 
                         // Field statistics (if enabled)
-                        if (options.ExportFieldStats && info.Fields != null && info.Fields.Count > 0)
+                        if (!isServiceLayer && options.ExportFieldStats && info.Fields != null && info.Fields.Count > 0)
                         {
                             try
                             {
@@ -359,7 +365,7 @@ namespace ProExporter
             }
 
             // Selection count
-            if (!exportFastSchema)
+            if (!exportFastSchema && !IsServiceLayer(info.DataSourceKind))
             {
                 try
                 {
@@ -375,6 +381,11 @@ namespace ProExporter
             if (string.IsNullOrWhiteSpace(info.DataSourceKind))
             {
                 info.DataSourceKind = NormalizeDataSourceKind(info.DataSourceType, info.DataSourcePath, null);
+            }
+
+            if (IsServiceLayer(info.DataSourceKind))
+            {
+                info.DataSourcePath = GetConciseServiceUrl(info.DataSourcePath);
             }
 
             // Renderer info
@@ -814,6 +825,74 @@ namespace ProExporter
             }
 
             return "unknown";
+        }
+
+        private static bool IsServiceLayer(string dataSourceKind)
+        {
+            return string.Equals(dataSourceKind, "service", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string GetConciseServiceUrl(string dataSourcePath)
+        {
+            if (string.IsNullOrWhiteSpace(dataSourcePath))
+            {
+                return dataSourcePath;
+            }
+
+            var trimmed = dataSourcePath.Trim();
+            if (TryGetServiceUri(trimmed, out var directUri))
+            {
+                return directUri.GetLeftPart(UriPartial.Path);
+            }
+
+            var httpIndex = trimmed.IndexOf("https://", StringComparison.OrdinalIgnoreCase);
+            if (httpIndex < 0)
+            {
+                httpIndex = trimmed.IndexOf("http://", StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (httpIndex < 0)
+            {
+                return trimmed;
+            }
+
+            var candidate = trimmed.Substring(httpIndex);
+            var delimiters = new[] { ';', '\r', '\n', '\t', '"', '\'', ' ', ')', '}', ']' };
+            var endIndex = candidate.Length;
+            foreach (var delimiter in delimiters)
+            {
+                var delimiterIndex = candidate.IndexOf(delimiter);
+                if (delimiterIndex >= 0 && delimiterIndex < endIndex)
+                {
+                    endIndex = delimiterIndex;
+                }
+            }
+
+            candidate = candidate.Substring(0, endIndex).TrimEnd(',', ';');
+            if (TryGetServiceUri(candidate, out var embeddedUri))
+            {
+                return embeddedUri.GetLeftPart(UriPartial.Path);
+            }
+
+            return candidate;
+        }
+
+        private static bool TryGetServiceUri(string value, out Uri uri)
+        {
+            uri = null;
+            if (!Uri.TryCreate(value, UriKind.Absolute, out var parsed))
+            {
+                return false;
+            }
+
+            if (!string.Equals(parsed.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(parsed.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            uri = parsed;
+            return true;
         }
 
         /// <summary>

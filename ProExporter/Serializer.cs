@@ -512,7 +512,7 @@ project_root/
     ├── context/
     │   ├── project.json    # Project metadata
     │   ├── maps.json       # All maps with extents/scales
-    │   ├── layers.json     # All layers with field schemas
+    │   ├── layers.json     # All layers (service layers are metadata-only)
     │   ├── tables.json     # Standalone tables
     │   ├── connections.json # Data connections
     │   ├── layouts.json    # Print layouts
@@ -552,6 +552,7 @@ Edit `.arcgispro/config.yml` to control exports:
 - `fields[]` — Array of field definitions
 - `sampleData[]` — Up to `sampleRowCount` sample rows (attributes only by default;
   geometry included only when `sampleGeometry: true`)
+- Service-backed layers omit heavyweight field/sample payloads and keep only concise source metadata
 
 ### maps.json  
 - `isActiveMap` — true = user is currently viewing this map
